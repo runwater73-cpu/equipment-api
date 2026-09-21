@@ -1,0 +1,6 @@
+{
+  "format_version": 3,
+  "id": "esa_connection:end",
+  "asset": "esa_connection:end_asset",
+  "mount": { "position": [0, 0, 0.5], "rotation": [0, 0, 0, 1] }
+}

@@ -1,0 +1,8 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "dev.equipmentstructure.api.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["client.ItemRendererMixin", "client.HumanoidArmorLayerMixin", "client.AgeableListModelAccessor", "client.ElytraModelAccessor", "client.ElytraLayerMixin", "client.AnimalArmorModelAccessor", "client.HorseArmorLayerMixin", "client.WolfArmorLayerMixin"],
+  "injectors": { "defaultRequire": 0 }
+}

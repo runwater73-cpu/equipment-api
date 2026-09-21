@@ -1,0 +1,12 @@
+{
+  "id": "equipment_structure_api:datapack_host",
+  "equipment_type": "equipment_structure_api:sword",
+  "version": 1,
+  "slots": [
+    {
+      "id": "equipment_structure_api:datapack_slot",
+      "interface_type": "equipment_structure_api:datapack_interface",
+      "component_type": "equipment_structure_api:datapack_component"
+    }
+  ]
+}

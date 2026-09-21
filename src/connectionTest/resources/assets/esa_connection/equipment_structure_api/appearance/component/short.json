@@ -1,0 +1,7 @@
+{
+  "format_version": 3,
+  "id": "esa_connection:short",
+  "asset": "esa_connection:short_asset",
+  "mount": { "position": [0, 0, 0.5], "rotation": [0, 0, 0, 1] },
+  "exits": { "esa_connection:tip": { "position": [0, 8, 0.5], "rotation": [0, 0, 0, 1] } }
+}

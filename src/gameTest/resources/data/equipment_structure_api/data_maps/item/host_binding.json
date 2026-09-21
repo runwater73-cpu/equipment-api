@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": {
+    "minecraft:paper": {
+      "host": "equipment_structure_api:datapack_host"
+    }
+  }
+}

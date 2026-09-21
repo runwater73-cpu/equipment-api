@@ -1,0 +1,29 @@
+{
+  "format_version": 3,
+  "id": "esa_connection:chain",
+  "ports": {
+    "esa_connection:base": {
+      "frame": { "position": [-14, -10, 0], "rotation": [0, 0, 0, 1] }
+    },
+    "esa_connection:next": {
+      "component_exit": { "slot": "esa_connection:root", "exit": "esa_connection:tip" },
+      "frame": { "position": [0, 0, 0], "rotation": [0, 0, 0, 1] }
+    }
+  },
+  "bindings": {
+    "esa_connection:root": {
+      "port": "esa_connection:base",
+      "joint": {
+        "owner": "esa_connection:chain", "strategy": "equipment_structure_api:anchor_only",
+        "offset": { "position": [0, 0, 0], "rotation": [0, 0, 0, 1] }
+      }
+    },
+    "esa_connection:child": {
+      "port": "esa_connection:next",
+      "joint": {
+        "owner": "esa_connection:chain", "strategy": "equipment_structure_api:anchor_only",
+        "offset": { "position": [0, 0, 0], "rotation": [0, 0, 0, 1] }
+      }
+    }
+  }
+}

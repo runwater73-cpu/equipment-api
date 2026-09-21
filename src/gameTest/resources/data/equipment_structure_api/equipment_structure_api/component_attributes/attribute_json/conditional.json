@@ -1,0 +1,12 @@
+{
+  "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "esa_nonexistent_test_mod"}],
+  "modifiers": [
+    {
+      "attribute": "esa_nonexistent_test_mod:power",
+      "id": "equipment_structure_api:attribute_json/optional_power",
+      "amount": 3.0,
+      "operation": "add_value",
+      "equipment_slot": "any"
+    }
+  ]
+}

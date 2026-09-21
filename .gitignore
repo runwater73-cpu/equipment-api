@@ -1,0 +1,14 @@
+.gradle/
+.gradle-user-home/
+build/
+run/
+run-gametest/
+run-smoke-server/
+run-smoke-client/
+.idea/
+*.iml
+*.log
+logs/
+build.local.cmd
+.DS_Store
+Thumbs.db

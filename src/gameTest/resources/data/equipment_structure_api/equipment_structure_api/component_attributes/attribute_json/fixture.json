@@ -1,0 +1,12 @@
+{
+  "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "neoforge"}],
+  "modifiers": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "id": "equipment_structure_api:attribute_json/armor",
+      "amount": 3.0,
+      "operation": "add_value",
+      "equipment_slot": "any"
+    }
+  ]
+}

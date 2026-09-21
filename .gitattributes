@@ -1,0 +1,11 @@
+# Stable text checkouts across Windows and Unix development environments.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.jar binary
+*.nbt binary
+
+# Generated resource files keep the generator's LF convention.
+src/generated/**/.cache/* text eol=lf
+src/generated/**/*.json text eol=lf

@@ -1,0 +1,8 @@
+{
+  "values": [
+    "minecraft:paper",
+    "minecraft:iron_axe",
+    "#equipment_structure_api:component_tag_test/nested",
+    {"id": "absent_optional_mod:part", "required": false}
+  ]
+}

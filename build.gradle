@@ -1,0 +1,98 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.143'
+}
+version = mod_version
+group = mod_group_id
+base.archivesName = mod_id
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.withSourcesJar()
+repositories { mavenCentral() }
+
+def gameTests = providers.gradleProperty('includeGameTests').map { it.toBoolean() }.getOrElse(false)
+def clientTest = providers.gradleProperty('includeClientTest').map { it.toBoolean() }.getOrElse(false)
+if (gameTests) {
+    sourceSets.main.java.srcDir('src/gameTest/java')
+    sourceSets.main.resources.srcDirs('src/gameTest/resources', 'src/connectionTest/resources')
+}
+if (clientTest) { sourceSets.main.java.srcDir('src/clientTest/java') }
+sourceSets.main.resources {
+    srcDir('src/generated/resources')
+    exclude('**/*.bbmodel', '**/.cache/**')
+}
+neoForge {
+    version = project.neo_version
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+    runs {
+        if (clientTest) {
+            smokeServer {
+                server()
+                gameDirectory = project.file('run-smoke-server')
+                programArgument '--nogui'
+            }
+            smokeClient {
+                client()
+                gameDirectory = project.file('run-smoke-client')
+                programArguments.addAll('--quickPlayMultiplayer', '127.0.0.1:25586', '--width', '1280', '--height', '900')
+            }
+        }
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = project.file('run-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        configureEach { logLevel = org.slf4j.event.Level.INFO }
+    }
+    mods { "${mod_id}" { sourceSet(sourceSets.main) } }
+}
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.0'
+}
+sourceSets.test {
+    resources.srcDir('src/connectionTest/resources')
+    compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+}
+tasks.withType(Test).configureEach { useJUnitPlatform() }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(Jar).configureEach {
+    includeEmptyDirs = false
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+    from('LICENSE')
+    doFirst {
+        if (gameTests || clientTest) throw new GradleException('Test fixtures cannot be packaged. Run a normal clean build for release.')
+    }
+}
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    def props = ['minecraft_version', 'minecraft_version_range', 'neo_version', 'loader_version_range',
+                 'mod_id', 'mod_name', 'mod_license', 'mod_version'].collectEntries { [(it): project.property(it)] }
+    inputs.properties props
+    expand props
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = mod_id
+            from components.java
+            pom {
+                name = 'Equipment Structure API'
+                description = 'Equipment templates, single-component installation points and grid assembly for NeoForge.'
+                url = 'https://github.com/runwater73-cpu/equipment-api'
+                licenses { license { name = 'MIT License'; url = 'https://opensource.org/license/mit' } }
+            }
+        }
+    }
+    repositories { maven { url = layout.buildDirectory.dir('repo') } }
+}
