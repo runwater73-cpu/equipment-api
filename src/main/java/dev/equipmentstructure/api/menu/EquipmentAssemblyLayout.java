@@ -41,13 +41,11 @@ public final class EquipmentAssemblyLayout {
     public static final int EQUIPMENT_FRAME_WIDTH = 28;
     public static final int EQUIPMENT_FRAME_HEIGHT = 28;
     public static final int EQUIPMENT_FRAME_INSET = 6;
-    /** Logical host-slot coordinates used by the container. */
-    public static final int EQUIPMENT_SLOT_X = WORKSPACE_X
-            + (WORKSPACE_WIDTH - EQUIPMENT_SLOT_SIZE) / 2;
-    public static final int EQUIPMENT_SLOT_Y = WORKSPACE_Y
-            + (WORKSPACE_HEIGHT - EQUIPMENT_SLOT_SIZE) / 2;
+    /** The host input and its rendered preview share the same left-panel coordinates. */
+    public static final int EQUIPMENT_SLOT_X = PREVIEW_X + 40;
+    public static final int EQUIPMENT_SLOT_Y = PREVIEW_Y + 40;
 
-    /** Vanilla item-icon position at the exact geometric center of the workspace. */
+    /** Vanilla item-icon position in the equipment preview panel. */
     public static int equipmentSlotX() {
         return EQUIPMENT_SLOT_X;
     }
@@ -65,7 +63,7 @@ public final class EquipmentAssemblyLayout {
         return equipmentSlotY() - EQUIPMENT_FRAME_INSET;
     }
 
-    /** Center point used by the interface-node layout, in GUI-local pixels. */
+    /** Center of the equipment preview, in GUI-local pixels. */
     public static int equipmentCoreX() {
         return equipmentSlotX() + EQUIPMENT_SLOT_SIZE / 2;
     }
@@ -74,7 +72,7 @@ public final class EquipmentAssemblyLayout {
         return equipmentSlotY() + EQUIPMENT_SLOT_SIZE / 2;
     }
 
-    /** Logical staging coordinates only. The screen projects this slot onto a workspace node. */
+    /** Internal staging coordinates; item transfers use the component sidebar. */
     public static final int COMPONENT_SLOT_X = -10000;
     public static final int COMPONENT_SLOT_Y = -10000;
     public static final int COMPONENT_FRAME_INSET = 1;

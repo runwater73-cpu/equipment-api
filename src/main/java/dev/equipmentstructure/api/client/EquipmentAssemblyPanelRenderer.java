@@ -14,23 +14,22 @@ final class EquipmentAssemblyPanelRenderer {
     }
 
     static void render(GuiGraphics graphics, int left, int top, EquipmentAssemblyUiLayout.Panel panel) {
-        int[] sourceWidths = {BORDER, 176 - 2 * BORDER, BORDER};
-        int[] sourceHeights = {BORDER, 90 - 2 * BORDER, BORDER};
-        int[] widths = {BORDER, panel.width() - 2 * BORDER, BORDER};
-        int[] heights = {BORDER, panel.height() - 2 * BORDER, BORDER};
         int y = top + panel.y();
         int v = 148;
         for (int row = 0; row < 3; row++) {
+            int height = row == 1 ? panel.height() - 2 * BORDER : BORDER;
+            int sourceHeight = row == 1 ? 90 - 2 * BORDER : BORDER;
             int x = left + panel.x();
             int u = 2;
             for (int column = 0; column < 3; column++) {
-                graphics.blit(TEXTURE, x, y, widths[column], heights[row], u, v,
-                        sourceWidths[column], sourceHeights[row], 512, 512);
-                x += widths[column];
-                u += sourceWidths[column];
+                int width = column == 1 ? panel.width() - 2 * BORDER : BORDER;
+                int sourceWidth = column == 1 ? 176 - 2 * BORDER : BORDER;
+                graphics.blit(TEXTURE, x, y, width, height, u, v, sourceWidth, sourceHeight, 512, 512);
+                x += width;
+                u += sourceWidth;
             }
-            y += heights[row];
-            v += sourceHeights[row];
+            y += height;
+            v += sourceHeight;
         }
     }
 }

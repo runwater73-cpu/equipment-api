@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1
+
+- Resize the component sidebar to its actual row count (four columns, up to six visible rows), with matching hit areas and scrolling for larger lists. Component details follow the resized panel.
+- Redraw all 15 empty-slot icons as transparent 16px monochrome outlines based on the supplied silhouettes.
+- Reuse sidebar geometry, render only visible slots, resolve the carried component once per frame, refresh idle display callbacks once per client tick, and avoid per-panel sizing-array allocations.
+- Keep the equipment input panel and its visible slot frame when the equipment is removed; show the empty-input hint.
+- Move the actual container slot into the left preview panel so item drawing, hover highlighting, clicks, and vanilla inventory gestures share one location.
+- Extend real client/server acceptance to equipment pickup, reinsertion, the inactive former center position, and Shift transfers without item loss or duplication.
+
 ## 0.1.0
 
 First public baseline for Minecraft 1.21.1 and NeoForge 21.1.244.

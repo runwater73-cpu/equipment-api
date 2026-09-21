@@ -4,7 +4,7 @@ Equipment Structure API is a NeoForge 1.21.1 API for equipment that carries modu
 
 This repository is the first publishable baseline. It does not promise to read development snapshots or migrate old experimental saves. Release `0.1.0` is the starting data format for new content mods.
 
-中文接入说明：[0.1.0 接入起步](docs/接入起步.md)。本模组提供 API 和预设模板，演示装备与部件由内容模组注册；不会自动改造全部原版装备。
+中文接入说明：[0.1.1 接入起步](docs/接入起步.md)。本模组提供 API 和预设模板，演示装备与部件由内容模组注册；不会自动改造全部原版装备。
 
 ![Grid assembly screen](docs/images/grid-assembly.png)
 
@@ -104,7 +104,7 @@ gradlew.bat test
 gradlew.bat -PincludeGameTests=true runGameTestServer
 ```
 
-The output is `build/libs/equipment_structure_api-0.1.0.jar` and its sources JAR.
+The output is `build/libs/equipment_structure_api-0.1.1.jar` and its sources JAR.
 
 ## License
 

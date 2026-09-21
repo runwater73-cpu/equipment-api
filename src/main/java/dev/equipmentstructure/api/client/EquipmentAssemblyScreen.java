@@ -53,7 +53,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     private static final int PLACEMENT_BUTTON_WIDTH = 64;
     private static final int PLACEMENT_BUTTON_HEIGHT = 14;
     private static final int PREVIEW_NAME_Y = 80;
-    private static final int PREVIEW_ACTION_GAP = 8;
+    private static final int PREVIEW_ACTION_GAP = 2;
 
     private static final ResourceLocation GUI_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(EquipmentStructureApiMod.MOD_ID,
@@ -70,6 +70,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     private Item selectionEquipmentItem;
     private List<EquipmentSlotDefinition> selectionDefinitions = List.of();
     private EquipmentAssemblyDisplaySnapshot displaySnapshot;
+    private ItemStack snapshotEquipment = ItemStack.EMPTY;
+    private boolean refreshDisplay = true;
     private boolean consumeNodeRelease;
     private ResourceLocation pendingPlacement;
     private ResourceLocation pendingQuickSelection;
@@ -114,11 +116,23 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     }
 
     @Override
+    protected void containerTick() {
+        super.containerTick();
+        refreshDisplay = true;
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         // All visible information for this frame comes from one immutable
         // read. Layout measurement and drawing therefore see identical data.
         EquipmentAssemblyDisplaySnapshot previousSnapshot = displaySnapshot;
-        displaySnapshot = EquipmentAssemblyDisplaySnapshot.capture(menu, selectedInterface);
+        // Author callbacks and component item factories run at most once per client tick
+        // while idle. A synchronized equipment change still appears in the next frame.
+        if (refreshDisplay || displaySnapshot == null || !ItemStack.matches(snapshotEquipment, menu.equipmentStack())) {
+            displaySnapshot = EquipmentAssemblyDisplaySnapshot.capture(menu, selectedInterface);
+            snapshotEquipment = menu.equipmentStack().copy();
+            refreshDisplay = false;
+        }
         ResourceLocation selectionBeforeUpdate = selectedInterface;
         updateSelection(previousSnapshot, displaySnapshot);
         // An equipment/schema sync or component removal can clear the selected ID. Recapture now so
@@ -237,8 +251,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     private void drawUpperArea(GuiGraphics graphics, int left, int top, int mouseX, int mouseY) {
         EquipmentAssemblyPanelRenderer.render(graphics, left, top, uiLayout.workspace());
         var snapshot = currentSnapshot();
-        if (snapshot.equipment().isEmpty()) return;
         renderPreviewPanel(graphics, left, top, snapshot);
+        if (snapshot.equipment().isEmpty()) return;
         gridView.render(graphics, font, left, top, mouseX, mouseY);
     }
 
@@ -248,15 +262,25 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         blitRegion(graphics, EQUIPMENT_PREVIEW, left + uiLayout.preview().x(),
                 top + uiLayout.preview().y());
         EquipmentStructureUiDefinition.Texts labels = snapshot.uiDefinition().texts();
-        List<EquipmentAssemblyDisplaySnapshot.EquipmentStatRow> statRows = snapshot.equipmentStats();
-        EquipmentAssemblyUiLayout.Panel stats = dynamicStatsPanel(statRows);
-        EquipmentAssemblyPanelRenderer.render(graphics, left, top, stats);
         graphics.drawString(font, font.plainSubstrByWidth(
                         Component.translatable(labels.preview()).getString(),
                         uiLayout.preview().width() - PANEL_PADDING * 2),
                 left + uiLayout.preview().x() + PANEL_PADDING,
                 top + uiLayout.preview().y() + PANEL_PADDING,
                 snapshot.uiDefinition().accentColor(), false);
+        blitRegion(graphics, EQUIPMENT_INPUT, left + EquipmentAssemblyLayout.equipmentFrameX(),
+                top + EquipmentAssemblyLayout.equipmentFrameY());
+        if (equipment.isEmpty()) {
+            graphics.drawString(font, font.plainSubstrByWidth(
+                            Component.translatable("gui.equipment_structure_api.assembly.empty").getString(),
+                            uiLayout.preview().width() - PANEL_PADDING * 2),
+                    left + uiLayout.preview().x() + PANEL_PADDING,
+                    top + uiLayout.preview().y() + PREVIEW_NAME_Y, 0xFF999999, false);
+            return;
+        }
+        List<EquipmentAssemblyDisplaySnapshot.EquipmentStatRow> statRows = snapshot.equipmentStats();
+        EquipmentAssemblyUiLayout.Panel stats = dynamicStatsPanel(statRows);
+        EquipmentAssemblyPanelRenderer.render(graphics, left, top, stats);
         graphics.drawString(font, font.plainSubstrByWidth(
                         Component.translatable(labels.stats()).getString(),
                         stats.width() - PANEL_PADDING * 2),
@@ -324,8 +348,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     private void renderEquipmentPreview(GuiGraphics graphics, int left, int top,
                                         EquipmentAssemblyDisplaySnapshot snapshot) {
         ItemStack equipment = snapshot.equipment();
-        int anchorX = left + uiLayout.preview().x() + 48;
-        int anchorY = top + uiLayout.preview().y() + 48;
+        int anchorX = left + EquipmentAssemblyLayout.equipmentCoreX();
+        int anchorY = top + EquipmentAssemblyLayout.equipmentCoreY();
         // The original item remains the authoritative fallback. Explicitly
         // registered appearance assets are drawn on top of the same anchor;
         // no component ItemStack is inferred as a visual resource.
@@ -405,20 +429,13 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         if (detailView.active() || gridView.busy()) return false;
         if (x == EquipmentAssemblyLayout.COMPONENT_SLOT_X && y == EquipmentAssemblyLayout.COMPONENT_SLOT_Y) return false;
         if (x == EquipmentAssemblyLayout.equipmentSlotX() && y == EquipmentAssemblyLayout.equipmentSlotY())
-            return revealProgress(0) >= .98F && super.isHovering(40, 42, 16, 16, mouseX, mouseY);
+            return revealProgress(0) >= .98F && super.isHovering(x, y, width, height, mouseX, mouseY);
         return super.isHovering(x, y, width, height, mouseX, mouseY);
     }
 
     @Override
     protected void renderSlotHighlight(GuiGraphics graphics, Slot slot, int mouseX, int mouseY, float partialTick) {
         if (slot.index == EquipmentAssemblyMenu.PART_SLOT_START) return;
-        if (slot.index == EquipmentAssemblyMenu.EQUIPMENT_SLOT) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(40 - slot.x, 42 - slot.y, 0);
-            super.renderSlotHighlight(graphics, slot, mouseX, mouseY, partialTick);
-            graphics.pose().popPose();
-            return;
-        }
         super.renderSlotHighlight(graphics, slot, mouseX, mouseY, partialTick);
     }
 
@@ -539,8 +556,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         if (contains(stats, x, y)) return Optional.of(new InformationEntry(EquipmentDetailsView.Page.ATTRIBUTES, stats));
         return menu.getCarried().isEmpty() && selectedInterface != null
                 && EquipmentStructureApi.component(menu.equipmentStack(), selectedInterface).isPresent()
-                && contains(EquipmentAssemblyGridView.DETAILS, x, y)
-                ? Optional.of(new InformationEntry(EquipmentDetailsView.Page.COMPONENTS, EquipmentAssemblyGridView.DETAILS))
+                && contains(gridView.details(), x, y)
+                ? Optional.of(new InformationEntry(EquipmentDetailsView.Page.COMPONENTS, gridView.details()))
                 : Optional.empty();
     }
 

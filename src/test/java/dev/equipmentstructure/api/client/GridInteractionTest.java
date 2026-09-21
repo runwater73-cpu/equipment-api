@@ -108,6 +108,24 @@ class GridInteractionTest {
         assertEquals(-1, GridSidebarLayout.indexAt(299, 30, 0, 0));
     }
 
+    @Test void sidebarPanelTracksVisibleRowsAndDoesNotLeaveInvisibleScrollTargets() {
+        assertEquals(1, GridSidebarLayout.visibleRows(1));
+        assertEquals(GridSidebarLayout.panel(1), GridSidebarLayout.panel(4));
+        assertEquals(21, GridSidebarLayout.panel(5).height() - GridSidebarLayout.panel(4).height());
+        assertEquals(GridSidebarLayout.panel(24), GridSidebarLayout.panel(256));
+        assertFalse(GridSidebarLayout.contains(300, 100, 5));
+        assertTrue(GridSidebarLayout.contains(300, 100, 24));
+        assertFalse(GridSidebarLayout.contains(300, 30, 0));
+        for (int count = 1; count <= 256; count++) {
+            assertTrue(GridSidebarLayout.visibleRows(count) <= 6);
+            int last = count - 1, first = GridSidebarLayout.maxScrollRow(count) * 4;
+            int x = 298 + (last % 4) * 21;
+            int y = 29 + ((last - first) / 4) * 21;
+            assertEquals(last, GridSidebarLayout.indexAt(x, y, Integer.MAX_VALUE, count));
+            assertTrue(GridSidebarLayout.contains(x + 18, y + 18, count));
+        }
+    }
+
     @Test void sidebarInstallationAvoidsSolidBodyAndAllowsReferenceOverlap() {
         var board = new GridBoard(GridShape.rectangle(3, 1), GridShape.rectangle(1, 1), new GridPlacement(0, 0));
         assertEquals(new GridPlacement(1, 0), GridSidebarPlacement.find(GridLayout.empty(board), A, GridFootprint.SINGLE_CELL).orElseThrow());

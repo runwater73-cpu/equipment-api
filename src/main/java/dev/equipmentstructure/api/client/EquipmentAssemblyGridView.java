@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** One workspace: sidebar transfers items, board gestures move only geometry. No client item prediction. */
 final class EquipmentAssemblyGridView {
-    static final EquipmentAssemblyUiLayout.Panel DETAILS = new EquipmentAssemblyUiLayout.Panel(288, 170, 104, 86);
-    private static final EquipmentAssemblyUiLayout.Panel SIDEBAR = new EquipmentAssemblyUiLayout.Panel(288, 2, 104, 162);
     private static final int VX = 110, VY = 26, VW = 164, VH = 114;
     private static final int SX = GridSidebarLayout.X, SY = GridSidebarLayout.Y, PITCH = GridSidebarLayout.PITCH,
             COLS = GridSidebarLayout.COLUMNS, ROWS = GridSidebarLayout.ROWS;
@@ -70,6 +68,7 @@ final class EquipmentAssemblyGridView {
     ResourceLocation selected() { return selected; }
     boolean busy() { return dragging != null || pending != null || panning; }
     boolean pending() { return pending != null; }
+    EquipmentAssemblyUiLayout.Panel details() { return GridSidebarLayout.details(snapshot == null ? 0 : snapshot.definitions().size()); }
     void cancelGesture() { dragging = null; grip = null; panning = false; }
     void select(ResourceLocation id) { selected = id; }
 
@@ -122,18 +121,22 @@ final class EquipmentAssemblyGridView {
             displayGeneration = GridComponentDisplayReloadListener.generation();
             artworkLayouts.clear(); textureAvailability.clear();
         }
-        EquipmentAssemblyPanelRenderer.render(g, left, top, SIDEBAR);
+        int slotCount = snapshot.definitions().size();
+        int visibleRows = GridSidebarLayout.visibleRows(slotCount);
+        EquipmentAssemblyPanelRenderer.render(g, left, top, GridSidebarLayout.panel(slotCount));
         g.pose().pushPose();
         g.pose().translate(left, top, 0);
         label(g, font, text("interfaces"), 298, 11, 84, 0xFFCCCCCC);
-        for (int n = 0; n < COLS * ROWS; n++) {
+        // Resolve a carried item once per frame, not once for every visible target.
+        boolean emptyCursor = menu.getCarried().isEmpty();
+        var candidate = emptyCursor ? null : EquipmentComponentRegistry.fromItemStack(menu.getCarried()).orElse(null);
+        for (int n = 0; n < COLS * visibleRows; n++) {
             int index = scrollRow * COLS + n;
             if (index >= snapshot.definitions().size()) break;
             var slot = snapshot.definitions().get(index);
             int x = SX + n % COLS * PITCH, y = SY + n / COLS * PITCH;
-            boolean compatible = menu.getCarried().isEmpty() || (structure != null
-                    && EquipmentComponentRegistry.fromItemStack(menu.getCarried())
-                    .filter(component -> slot.accepts(structure.equipmentType(), component)).isPresent());
+            boolean compatible = emptyCursor || (structure != null && candidate != null
+                    && slot.accepts(structure.equipmentType(), candidate));
             g.fill(x, y, x + 19, y + 19, 0xDD15191D);
             g.renderOutline(x, y, 19, 19, slot.id().equals(selected) ? 0xFFB4C9D9 : compatible ? 0xFF656B70 : 0xFF995D5D);
             var info = snapshot.componentInfo().get(slot.id());
@@ -144,9 +147,7 @@ final class EquipmentAssemblyGridView {
             } else {
                 snapshot.uiDefinition().slot(slot.id()).emptyIcon()
                         .filter(EquipmentAssemblyGridView::hasSprite).ifPresent(icon -> {
-                            g.setColor(.65F, .65F, .65F, .55F);
                             g.blitSprite(icon, x + 1, y + 1, 16, 16);
-                            g.setColor(1, 1, 1, 1);
                         });
             }
         }
@@ -197,10 +198,11 @@ final class EquipmentAssemblyGridView {
         if (selected != null && menu.getCarried().isEmpty()) {
             var info = snapshot.componentInfo().get(selected);
             if (info != null && info.installed().isPresent()) {
-                EquipmentAssemblyPanelRenderer.render(g, left, top, DETAILS);
-                g.renderItem(info.itemStack(), left + 331, top + 181);
-                label(g, font, info.itemName(), left + 298, top + 202, 84, 0xFFEEEEEE);
-                label(g, font, snapshot.interfaceName(selected), left + 298, top + 216, 84, 0xFFAAAAAA);
+                var panel = details();
+                EquipmentAssemblyPanelRenderer.render(g, left, top, panel);
+                g.renderItem(info.itemStack(), left + panel.x() + 43, top + panel.y() + 11);
+                label(g, font, info.itemName(), left + panel.x() + 10, top + panel.y() + 32, 84, 0xFFEEEEEE);
+                label(g, font, snapshot.interfaceName(selected), left + panel.x() + 10, top + panel.y() + 46, 84, 0xFFAAAAAA);
             }
         }
         spaces.renderPanel(g, font, left, top, mx, my);
@@ -340,7 +342,7 @@ final class EquipmentAssemblyGridView {
             }
             return true;
         }
-        return inside(x, y, 104, 2, 176, 162) || inside(x, y, 288, 2, 104, 162);
+        return inside(x, y, 104, 2, 176, 162) || GridSidebarLayout.contains(x, y, snapshot.definitions().size());
     }
 
     private void transfer(ResourceLocation slot, boolean quickMove) {
@@ -393,7 +395,7 @@ final class EquipmentAssemblyGridView {
 
     boolean scroll(double x, double y, double amount) {
         if (spaces.scroll(x, y, amount)) return true;
-        if (inside(x, y, 288, 2, 104, 162)) {
+        if (GridSidebarLayout.contains(x, y, snapshot.definitions().size())) {
             scrollRow = Math.clamp(scrollRow + (amount < 0 ? 1 : amount > 0 ? -1 : 0), 0, maxScrollRow());
             return true;
         }

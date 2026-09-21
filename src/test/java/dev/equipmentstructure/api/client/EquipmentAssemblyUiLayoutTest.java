@@ -25,21 +25,21 @@ class EquipmentAssemblyUiLayoutTest {
         int equipmentFrameY = EquipmentAssemblyLayout.EQUIPMENT_SLOT_Y
                 - EquipmentAssemblyLayout.EQUIPMENT_FRAME_INSET;
 
-        assertTrue(equipmentFrameX >= layout.workspace().x());
-        assertTrue(equipmentFrameY >= layout.workspace().y());
-        assertTrue(equipmentFrameX + 28 <= layout.workspace().right());
-        assertTrue(equipmentFrameY + 28 <= layout.workspace().bottom());
+        assertTrue(equipmentFrameX >= layout.preview().x());
+        assertTrue(equipmentFrameY >= layout.preview().y());
+        assertTrue(equipmentFrameX + 28 <= layout.preview().right());
+        assertTrue(equipmentFrameY + 28 <= layout.preview().bottom());
         // Logical staging has no fixed on-screen location, especially not in the preview.
         assertTrue(EquipmentAssemblyLayout.COMPONENT_SLOT_X < 0);
         assertTrue(EquipmentAssemblyLayout.COMPONENT_SLOT_Y < 0);
     }
 
     @Test
-    void equipmentSlotIsCenteredInWorkspace() {
+    void equipmentSlotIsCenteredInPreview() {
         EquipmentAssemblyUiLayout layout = EquipmentAssemblyUiLayout.standard();
-        assertEquals(layout.workspace().x() + (layout.workspace().width() - 16) / 2,
+        assertEquals(layout.preview().x() + (layout.preview().width() - 16) / 2,
                 layout.equipmentSlotX());
-        assertEquals(layout.workspace().y() + (layout.workspace().height() - 16) / 2,
+        assertEquals(layout.preview().y() + (layout.preview().height() - 16) / 2,
                 layout.equipmentSlotY());
     }
 

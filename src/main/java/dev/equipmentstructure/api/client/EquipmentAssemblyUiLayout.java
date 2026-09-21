@@ -58,14 +58,14 @@ public record EquipmentAssemblyUiLayout(Panel preview, Panel stats, Panel worksp
         if (workspace.right() > details.x()) {
             throw new IllegalStateException("Workspace overlaps interface details panel");
         }
-        if (equipmentSlotX() < workspace.x()
-                || equipmentSlotX() + 18 > workspace.right()
-                || equipmentSlotY() < workspace.y()
-                || equipmentSlotY() + 18 > workspace.bottom()) {
-            throw new IllegalStateException("Equipment slot is outside workspace");
+        if (EquipmentAssemblyLayout.equipmentFrameX() < preview.x()
+                || EquipmentAssemblyLayout.equipmentFrameX() + EquipmentAssemblyLayout.EQUIPMENT_FRAME_WIDTH > preview.right()
+                || EquipmentAssemblyLayout.equipmentFrameY() < preview.y()
+                || EquipmentAssemblyLayout.equipmentFrameY() + EquipmentAssemblyLayout.EQUIPMENT_FRAME_HEIGHT > preview.bottom()) {
+            throw new IllegalStateException("Equipment input frame is outside preview panel");
         }
         Panel componentPreview = componentPreview();
-        // Component input is projected onto the selected workspace node. The preview is display-only.
+        // Component input uses the sidebar; the component preview is display-only.
         if (componentPreview.bottom() > componentInfo().y()
                 || details.x() != componentInfo().x()
                 || details.y() != componentInfo().y()
