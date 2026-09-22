@@ -104,7 +104,7 @@ gradlew.bat test
 gradlew.bat -PincludeGameTests=true runGameTestServer
 ```
 
-The output is `build/libs/equipment_structure_api-0.1.1.jar` and its sources JAR.
+The output is `build/libs/equipment_structure_api-0.1.2.jar` and its sources JAR.
 
 ## License
 

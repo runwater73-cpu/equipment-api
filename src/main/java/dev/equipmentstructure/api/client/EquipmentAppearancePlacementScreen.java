@@ -634,9 +634,9 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
         var part = structure.component(slotId).orElse(null);
         if (definition == null || part == null) return entryName(slotId).copy().append("\n").append(slotId.toString()).append(suffix);
         return Component.translatable("gui.equipment_structure_api.placement.slot_info", slotName(slotId))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.slot_id_info", definition.id()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.interface_info", definition.interfaceType()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_type_info", definition.componentType()))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.slot_id_info", definition.id().toString()))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.interface_info", definition.interfaceType().toString()))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_type_info", definition.componentType().toString()))
                 .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_info", names.get(slotId)))
                 .append(suffix);
     }

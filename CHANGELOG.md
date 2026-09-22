@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Fix the 3D placement editor crash when a component is selected. Resource-location IDs are now passed to translated UI text as strings, which is the type accepted by Minecraft's translation component system.
+
 ## 0.1.1
 
 - Resize the component sidebar to its actual row count (four columns, up to six visible rows), with matching hit areas and scrolling for larger lists. Component details follow the resized panel.
