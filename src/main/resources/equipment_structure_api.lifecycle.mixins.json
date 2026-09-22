@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.equipmentstructure.api.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["EquipmentBreakMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

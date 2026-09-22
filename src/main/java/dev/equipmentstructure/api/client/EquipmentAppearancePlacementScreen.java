@@ -49,6 +49,7 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
     private AppearanceTransform selectedAnchor;
     private AppearanceOrbitGizmo orbitGizmo;
     private AppearancePlan capturedPlan;
+    private final Map<ResourceLocation, Matrix4f> nativeFrames = new HashMap<>();
     private ItemStack preview;
     private int mode, axis = -1, dragButton = -1, listOffset;
     private boolean dragPart, dragOrbit, dragCheckpoint;
@@ -262,16 +263,25 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
         try {
             g.pose().translate((12 + previewRight()) / 2F + panX, (previewTop() + previewBottom()) / 2F + panY, 150);
             Lighting.setupFor3DItems(); selectionGeometry = new AppearancePreviewSelection(g.bufferSource(), selected);
-            capturedFrame = null; capturedPlan = null; updateSelectedFrame();
+            capturedFrame = null; capturedPlan = null; nativeFrames.clear(); updateSelectedFrame();
             if (previewRenderer == null) previewRenderer = new EquipmentAppearancePreviewRenderer(minecraft);
             previewRenderer.render(preview, selected, g.pose(), selectionGeometry, zoom, yaw, pitch,
-                    LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, this::captureFrame);
+                    LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, this::captureFrame,
+                    (id, frame) -> { nativeFrames.put(id, new Matrix4f(frame)); updateSelectedFrame(); });
             g.flush();
         } finally { g.pose().popPose(); g.disableScissor(); Lighting.setupFor3DItems(); }
     }
     private void captureFrame(Matrix4f model, AppearancePlan plan) { capturedFrame = new Matrix4f(model); capturedPlan = plan; updateSelectedFrame(); }
     private void updateSelectedFrame() {
         gizmo.clear(); authorAnchor.clear(); selectedAnchor = null; orbitGizmo = null;
+        if (selected != null && nativeFrames.containsKey(selected)) {
+            var frame = nativeFrames.get(selected);
+            var p = pose().transform().position();
+            authorAnchor.update(frame, 0, 0, 0);
+            gizmo.update(frame, (float) p.x(), (float) p.y(), (float) p.z());
+            selectedAnchor = AppearanceTransform.IDENTITY;
+            return;
+        }
         if (selected == null || capturedFrame == null || capturedPlan == null) return;
         var placement = capturedPlan.placements().stream().filter(p -> p.slotId().equals(selected)).findFirst().orElse(null);
         if (placement == null) return;

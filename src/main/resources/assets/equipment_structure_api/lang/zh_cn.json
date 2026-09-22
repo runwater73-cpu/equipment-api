@@ -1,4 +1,5 @@
 {
+  "gui.equipment_structure_api.curios.cosmetic": "（外观槽）",
   "interface.equipment_structure_api.armor_decoration": "甲饰",
   "slot.equipment_structure_api.armor_decoration": "甲饰",
   "interface.equipment_structure_api.pendant": "挂饰",
@@ -441,5 +442,17 @@
   "gui.equipment_structure_api.grid.status.no_space": "没有能容纳部件形状的空位。",
   "gui.equipment_structure_api.grid.status.placement_rejected": "该位置不可放置部件。",
   "gui.equipment_structure_api.grid.status.unknown_slot": "此接口已不存在。",
-  "gui.equipment_structure_api.grid.status.empty_slot": "此接口没有已安装部件。"
+  "gui.equipment_structure_api.grid.status.empty_slot": "此接口没有已安装部件。",
+  "gui.equipment_structure_api.curios.player_bound": "已绑定玩家：脱甲、换甲和装备损坏均不解除。取下须满足饰品原有条件。",
+  "gui.equipment_structure_api.curios.bindings": "永恒之契",
+  "gui.equipment_structure_api.curios.binding_title": "「永恒之契，诸界不可断」",
+  "gui.equipment_structure_api.curios.binding_description": "当誓约刻入灵魂的那一刻，装备便不再只是凡物。\n它将跨越死亡、遗忘与时空的阻隔，永远回应你的召唤。",
+  "gui.equipment_structure_api.curios.binding_hint": "无需护甲。使用基础或永久解锁槽位，换装不解除绑定。",
+  "gui.equipment_structure_api.curios.equipment_tab": "装备装配",
+  "gui.equipment_structure_api.curios.no_bindings": "当前没有可用的永久绑定饰品槽位。",
+  "gui.equipment_structure_api.curios.armor_occupied": "此槽位已由穿戴装备中的饰品占用。",
+  "gui.equipment_structure_api.curios.native_inactive": "Curios 已停用此槽位：物品保留，效果暂停。",
+  "gui.equipment_structure_api.curios.native_unavailable": "当前原生槽位不可用；已存物品仍可取回。",
+  "gui.equipment_structure_api.curios.render_on": "Curios 模型显示：开启（Alt + 右键切换）。",
+  "gui.equipment_structure_api.curios.render_off": "Curios 模型显示：关闭（Alt + 右键切换）。"
 }

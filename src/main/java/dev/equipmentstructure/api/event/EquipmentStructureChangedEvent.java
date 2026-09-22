@@ -7,7 +7,7 @@ import net.neoforged.bus.api.Event;
 /** 结构成功改变后触发，用于刷新缓存、属性或客户端展示。 */
 public final class EquipmentStructureChangedEvent extends Event {
 
-    public enum ChangeType { INSTALLED, REMOVED, EXTENDED, MIGRATED, APPEARANCE_UPDATED, COMPONENT_DATA_UPDATED, GRID_UPDATED, REPLACED }
+    public enum ChangeType { INSTALLED, REMOVED, EXTENDED, MIGRATED, APPEARANCE_UPDATED, COMPONENT_DATA_UPDATED, GRID_UPDATED, REPLACED, SLOTS_RECONCILED }
 
     private final ItemStack stack;
     private final EquipmentStructure previous;

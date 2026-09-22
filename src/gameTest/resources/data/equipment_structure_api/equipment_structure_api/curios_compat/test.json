@@ -1,0 +1,10 @@
+{
+  "player_bound_items": {"minecraft:diamond": true},
+  "items": {"minecraft:diamond":{"shape":[{"x":0,"y":0},{"x":1,"y":0}],"rotations":[0,1,2,3]}},
+  "slots": {
+    "esa_test_head": {
+      "armor_slot":"head",
+      "footprint":{"shape":[{"x":0,"y":0}],"rotations":[0,1,2,3]}
+    }
+  }
+}

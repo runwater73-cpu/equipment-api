@@ -34,6 +34,7 @@ public final class SmokeClient {
         if (!done && event.getScreen() instanceof EquipmentAssemblyScreen) event.setCanceled(true);
     }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
+        if (Boolean.getBoolean("equipment_structure_api.curiosSmoke") || Boolean.getBoolean("equipment_structure_api.enigmaticSmoke")) return;
         if (done) return;
         var mc = Minecraft.getInstance();
         mc.getToasts().clear();

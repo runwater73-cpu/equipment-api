@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.equipmentstructure.api.compat.curios.mixin",
+  "plugin": "dev.equipmentstructure.api.compat.curios.mixin.CuriosMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["CuriosLayerMixin", "EnigmaticElytraMixin"],
+  "mixins": ["CurioStacksHandlerMixin", "CuriosContainerMixin", "CurioInventoryMixin", "ItemStackCopyMixin", "CuriosLifecycleMixin", "ArmorDeathMixin", "ArmorSlotMixin", "CuriosQueriesMixin", "EnigmaticForceEquipMixin"],
+  "injectors": {"defaultRequire": 1}
+}

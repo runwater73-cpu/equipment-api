@@ -233,6 +233,25 @@ public final class EquipmentStructureApi {
                 Objects.requireNonNull(structure, "structure"));
     }
 
+    /** Reconcile dynamic empty slots without deleting/retyping occupied slots or changing geometry. */
+    public static boolean reconcileSlots(ItemStack stack, EquipmentStructure expected, List<EquipmentSlotDefinition> slots) {
+        Objects.requireNonNull(expected, "expected");
+        if (!isCurrentStructure(stack, expected)) return false;
+        var changed = new EquipmentStructure(expected.hostId(), expected.equipmentType(), slots,
+                expected.components(), expected.version(), expected.grid());
+        for (var id : expected.components().keySet()) {
+            if (!expected.slot(id).equals(changed.slot(id)))
+                throw new IllegalArgumentException("Reconciliation cannot remove or retype an occupied slot: " + id);
+        }
+        if (expected.equals(changed)) return true;
+        if (NeoForge.EVENT_BUS.post(new dev.equipmentstructure.api.event.EquipmentSlotsReconcileEvent(stack, expected, changed)).isCanceled()
+                || !isCurrentStructure(stack, expected)) return false;
+        setStructure(stack, changed);
+        NeoForge.EVENT_BUS.post(new EquipmentStructureChangedEvent(stack, expected, changed,
+                EquipmentStructureChangedEvent.ChangeType.SLOTS_RECONCILED));
+        return true;
+    }
+
     /** Low-level removal of all structure data. Does not return parts or fire mutation events. */
     public static void clearStructure(ItemStack stack) {
         Objects.requireNonNull(stack, "stack");

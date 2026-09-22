@@ -62,6 +62,7 @@ public final class EquipmentStructureCommands {
             }
             movedHeldEquipment = true;
         }
+        dev.equipmentstructure.api.EquipmentSlotItemAdapters.prepare(equipment, server.registryAccess(), player);
         java.util.List<EquipmentSlotDefinition> definitions = EquipmentStructureApi.slots(equipment);
         if (!dev.equipmentstructure.api.menu.EquipmentAssemblyLimits.supports(definitions.size())) return false;
         SimpleContainer container = new SimpleContainer(

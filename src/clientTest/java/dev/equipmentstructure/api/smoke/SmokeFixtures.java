@@ -32,6 +32,7 @@ public final class SmokeFixtures {
         });
     }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
+        if (Boolean.getBoolean("equipment_structure_api.curiosSmoke") || Boolean.getBoolean("equipment_structure_api.enigmaticSmoke")) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         player.serverLevel().setDayTime(6000L);
         if (!GridDefinitions.registered().hosts().containsKey(BuiltinEquipmentTemplates.SWORD))

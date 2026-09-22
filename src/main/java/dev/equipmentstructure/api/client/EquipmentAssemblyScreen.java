@@ -77,6 +77,9 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     private ResourceLocation pendingQuickSelection;
     private net.minecraft.client.gui.components.Button placementButton;
     private final EquipmentAssemblyGridView gridView;
+    private dev.equipmentstructure.api.compat.curios.client.CuriosBindingPanel bindingPanel;
+    private boolean bindingsOpen;
+    private net.minecraft.client.gui.components.Button equipmentTab, bindingsTab;
 
     public EquipmentAssemblyScreen(EquipmentAssemblyMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -89,6 +92,20 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
 
     @Override protected void init() {
         super.init();
+        if (net.neoforged.fml.ModList.get().isLoaded("curios")
+                && dev.equipmentstructure.api.compat.curios.CuriosArmorCompat.definitions(minecraft.player).enabled()) {
+            if (bindingPanel == null) {
+                bindingPanel = new dev.equipmentstructure.api.compat.curios.client.CuriosBindingPanel();
+                bindingsOpen = menu.equipmentStack().isEmpty();
+            }
+            bindingPanel.tick();
+            equipmentTab = addRenderableWidget(EquipmentStructureButton.builder(
+                    Component.translatable("gui.equipment_structure_api.curios.equipment_tab"), ignored -> showBindings(false))
+                    .bounds(leftPos + 104, topPos - 17, 85, 16).build(EquipmentStructureButton::new));
+            var bindingLabel = Component.translatable("gui.equipment_structure_api.curios.bindings");
+            bindingsTab = addRenderableWidget(EquipmentStructureButton.builder(bindingLabel, ignored -> showBindings(true))
+                    .bounds(leftPos + 193, topPos - 17, Math.max(87, font.width(bindingLabel) + 12), 16).build(EquipmentStructureButton::new));
+        }
         gridView.cancelGesture();
         EquipmentAssemblyUiLayout.Panel preview = uiLayout.preview();
         // Reserve the name row below the action and leave the authored frame clear.
@@ -119,6 +136,13 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     protected void containerTick() {
         super.containerTick();
         refreshDisplay = true;
+        if (bindingPanel != null) bindingPanel.tick();
+    }
+
+    public void showBindings(boolean open) {
+        if (bindingPanel == null || gridView.busy()) return;
+        gridView.closeSpacePanel(); gridView.cancelGesture();
+        bindingsOpen = open; detailView.open(EquipmentDetailsView.Page.HOME, null);
     }
 
     @Override
@@ -154,9 +178,14 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
             selectedInterface = gridView.selected();
             displaySnapshot = EquipmentAssemblyDisplaySnapshot.capture(menu, selectedInterface);
         }
-        placementButton.visible = !detailView.active() && revealProgress(0) >= 0.98F
+        placementButton.visible = !bindingsOpen && !detailView.active() && revealProgress(0) >= 0.98F
                 && EquipmentStructureApi.structure(menu.equipmentStack()).map(s -> !s.components().isEmpty()).orElse(false);
         placementButton.active = !gridView.busy();
+        if (bindingPanel != null) {
+            equipmentTab.visible = bindingsTab.visible = !detailView.active();
+            equipmentTab.active = bindingsOpen && !gridView.busy();
+            bindingsTab.active = !bindingsOpen && !gridView.busy();
+        }
         if (launchPlacementAfterInstall(displaySnapshot)) return;
         if (displaySnapshot.equipment().isEmpty()) detailView.open(EquipmentDetailsView.Page.HOME, null);
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -168,7 +197,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     @Override
     protected void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         if (detailView.active()) return;
-        if (gridView.tooltip(graphics, font, leftPos, topPos, mouseX, mouseY)) return;
+        if (bindingsOpen && bindingPanel.tooltip(graphics, leftPos, topPos, mouseX, mouseY)) return;
+        if (!bindingsOpen && gridView.tooltip(graphics, font, leftPos, topPos, mouseX, mouseY)) return;
         if (renderInformationEntryHover(graphics, mouseX, mouseY)) return;
         if (hoveredSlot != null && hoveredSlot.index >= EquipmentAssemblyMenu.PART_SLOT_START
                 && hoveredSlot.index < EquipmentAssemblyMenu.PART_SLOT_START + EquipmentAssemblyMenu.stagingSlotCount()) {
@@ -252,6 +282,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         EquipmentAssemblyPanelRenderer.render(graphics, left, top, uiLayout.workspace());
         var snapshot = currentSnapshot();
         renderPreviewPanel(graphics, left, top, snapshot);
+        if (bindingsOpen) { bindingPanel.render(graphics, left, top); return; }
         if (snapshot.equipment().isEmpty()) return;
         gridView.render(graphics, font, left, top, mouseX, mouseY);
     }
@@ -464,7 +495,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         // Vanilla retains Escape/inventory-key handling and normal container cleanup.
         {
             refreshGridInput();
-            if (gridView.key(keyCode)) return true;
+            if (!bindingsOpen && gridView.key(keyCode)) return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -490,7 +521,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         }
         {
             refreshGridInput();
-            if (gridView.click(mouseX - leftPos, mouseY - topPos, button, hasShiftDown())) {
+            if (bindingsOpen ? bindingPanel.click(menu, mouseX - leftPos, mouseY - topPos, button, hasShiftDown())
+                    : gridView.click(mouseX - leftPos, mouseY - topPos, button, hasShiftDown())) {
                 selectedInterface = gridView.selected();
                 isQuickCrafting = false;
                 quickCraftSlots.clear();
@@ -518,7 +550,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
         if (detailView.active()) return true;
         {
             refreshGridInput();
-            if (gridView.drag(mouseX - leftPos, mouseY - topPos, button, dragX, dragY)) return true;
+            if (!bindingsOpen && gridView.drag(mouseX - leftPos, mouseY - topPos, button, dragX, dragY)) return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
@@ -527,7 +559,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         {
             refreshGridInput();
-            if (gridView.release(mouseX - leftPos, mouseY - topPos, button)) {
+            if (!bindingsOpen && gridView.release(mouseX - leftPos, mouseY - topPos, button)) {
                 consumeNodeRelease = false;
                 return true;
             }
@@ -543,6 +575,8 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (detailView.active()) return detailView.mouseScrolled(mouseX - leftPos, mouseY - topPos, scrollY);
+        if (bindingsOpen) return bindingPanel.scroll(mouseX - leftPos, mouseY - topPos, scrollY)
+                || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         refreshGridInput();
         return gridView.scroll(mouseX - leftPos, mouseY - topPos, scrollY)
                 || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -550,7 +584,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
 
     private Optional<InformationEntry> informationEntryAt(double mouseX, double mouseY) {
         var snapshot = currentSnapshot();
-        if (detailView.active() || revealProgress(0) < .98F || snapshot.equipment().isEmpty()) return Optional.empty();
+        if (bindingsOpen || detailView.active() || revealProgress(0) < .98F || snapshot.equipment().isEmpty()) return Optional.empty();
         double x = mouseX - leftPos, y = mouseY - topPos;
         var stats = dynamicStatsPanel(snapshot.equipmentStats());
         if (contains(stats, x, y)) return Optional.of(new InformationEntry(EquipmentDetailsView.Page.ATTRIBUTES, stats));

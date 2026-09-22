@@ -51,6 +51,10 @@ final class EquipmentAssemblyGridView {
     private final Map<GridArtworkLayout.Key, GridArtworkLayout.Frame> artworkLayouts = new java.util.HashMap<>();
     private final Map<ResourceLocation, Boolean> textureAvailability = new java.util.HashMap<>();
     private long displayGeneration = -1;
+    private long candidateTick = -1;
+    private long playerItemsTick = -1;
+    private final Map<ResourceLocation, ItemStack> playerItems = new java.util.HashMap<>();
+    private final Map<ResourceLocation, java.util.Optional<dev.equipmentstructure.api.EquipmentComponentInstance>> candidates = new java.util.HashMap<>();
     private EquipmentStructure ruleStructure;
     private GridDefinitions ruleDefinitions;
     private Map<dev.equipmentstructure.api.grid.synergy.GridRuleRegistry.Key, dev.equipmentstructure.api.grid.synergy.GridRuleResult> ruleResults = Map.of(), previewRuleResults = Map.of();
@@ -61,8 +65,16 @@ final class EquipmentAssemblyGridView {
     void closeSpacePanel() { spaces.close(); }
 
     static boolean hasSprite(ResourceLocation id) {
-        return !Minecraft.getInstance().getGuiSprites().getSprite(id).contents().name()
-                .equals(net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation());
+        var mc = Minecraft.getInstance();
+        var missing = net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
+        return !mc.getGuiSprites().getSprite(id).contents().name().equals(missing)
+                || !mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS).apply(id).contents().name().equals(missing);
+    }
+    private static void drawSprite(GuiGraphics graphics, ResourceLocation id, int x, int y) {
+        var mc = Minecraft.getInstance();
+        if (!mc.getGuiSprites().getSprite(id).contents().name().equals(net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation()))
+            graphics.blitSprite(id, x, y, 16, 16);
+        else graphics.blit(x, y, 0, 16, 16, mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS).apply(id));
     }
 
     ResourceLocation selected() { return selected; }
@@ -80,6 +92,7 @@ final class EquipmentAssemblyGridView {
                 || observedEquipment.getItem() != menu.equipmentStack().getItem();
         boolean changed = !ItemStack.matches(observedEquipment, menu.equipmentStack()) || !Objects.equals(catalog, definitions);
         if (changed || !ItemStack.matches(observedCarried, menu.getCarried())) {
+            candidates.clear();
             if (dragging != null) feedback("changed");
             cancelGesture();
             observedCarried = menu.getCarried().copy();
@@ -127,13 +140,18 @@ final class EquipmentAssemblyGridView {
         g.pose().pushPose();
         g.pose().translate(left, top, 0);
         label(g, font, text("interfaces"), 298, 11, 84, 0xFFCCCCCC);
-        // Resolve a carried item once per frame, not once for every visible target.
+        // The destination supplies external-slot semantics; only visible targets are inspected.
         boolean emptyCursor = menu.getCarried().isEmpty();
-        var candidate = emptyCursor ? null : EquipmentComponentRegistry.fromItemStack(menu.getCarried()).orElse(null);
+        long tick = Minecraft.getInstance().level == null ? 0 : Minecraft.getInstance().level.getGameTime();
+        if (candidateTick != tick) { candidateTick = tick; candidates.clear(); }
+        if (playerItemsTick != tick) { playerItemsTick = tick; playerItems.clear(); }
         for (int n = 0; n < COLS * visibleRows; n++) {
             int index = scrollRow * COLS + n;
             if (index >= snapshot.definitions().size()) break;
             var slot = snapshot.definitions().get(index);
+            var personal = playerItems.computeIfAbsent(slot.id(), id -> dev.equipmentstructure.api.EquipmentSlotItemAdapters
+                    .playerOwnedItem(menu.equipmentStack(), id, Minecraft.getInstance().player));
+            var candidate = emptyCursor ? null : candidates.computeIfAbsent(slot.id(), id -> menu.readComponent(menu.getCarried(), id)).orElse(null);
             int x = SX + n % COLS * PITCH, y = SY + n / COLS * PITCH;
             boolean compatible = emptyCursor || (structure != null && candidate != null
                     && slot.accepts(structure.equipmentType(), candidate));
@@ -141,13 +159,18 @@ final class EquipmentAssemblyGridView {
             g.renderOutline(x, y, 19, 19, slot.id().equals(selected) ? 0xFFB4C9D9 : compatible ? 0xFF656B70 : 0xFF995D5D);
             var info = snapshot.componentInfo().get(slot.id());
             if (info != null && info.installed().isPresent()) {
-                g.renderItem(info.itemStack(), x + 1, y + 1);
+                g.renderItem(slotDisplay(slot.id(), info.itemStack()), x + 1, y + 1);
                 int color = GridComponentDisplayRegistry.get(info.installed().get().id()).resolvedColor(info.installed().get().id());
                 g.fill(x + 2, y + 17, x + 17, y + 18, 0xFF000000 | color);
+            } else if (!personal.isEmpty()) {
+                g.renderItem(slotDisplay(slot.id(), personal), x + 1, y + 1);
+                g.renderOutline(x, y, 19, 19, 0xFFD3A65C);
             } else {
-                snapshot.uiDefinition().slot(slot.id()).emptyIcon()
+                var display = slotDisplay(slot.id(), ItemStack.EMPTY);
+                if (!display.isEmpty()) g.renderItem(display, x + 1, y + 1);
+                else snapshot.uiDefinition().slot(slot.id()).emptyIcon()
                         .filter(EquipmentAssemblyGridView::hasSprite).ifPresent(icon -> {
-                            g.blitSprite(icon, x + 1, y + 1, 16, 16);
+                            drawSprite(g, icon, x + 1, y + 1);
                         });
             }
         }
@@ -306,8 +329,16 @@ final class EquipmentAssemblyGridView {
         if (id == null && layout != null && camera.contains(x, y)) id = layout.componentAt(camera.cell(x, y)).orElse(null);
         var lines = new ArrayList<Component>();
         if (id != null) {
+            var personal = playerItems.getOrDefault(id, ItemStack.EMPTY);
+            if (!personal.isEmpty()) {
+                lines.add(personal.getHoverName());
+                lines.add(Component.translatable("gui.equipment_structure_api.curios.player_bound"));
+            }
             var info = snapshot.componentInfo().get(id);
             if (info != null && info.installed().isPresent()) lines.add(info.itemName());
+            if (net.neoforged.fml.ModList.get().isLoaded("curios"))
+                dev.equipmentstructure.api.compat.curios.client.CuriosSlotPresentation.tooltip(id,
+                        !personal.isEmpty() ? personal : info == null ? ItemStack.EMPTY : info.itemStack(), lines);
             lines.addAll(snapshot.interfaceTooltip(id));
         } else if (camera.contains(x, y)) {
             if (board != null && board.bodyCells().contains(camera.cell(x, y)))
@@ -324,6 +355,8 @@ final class EquipmentAssemblyGridView {
         if (spaces.click(x, y, button)) return true;
         var slot = slotAt(x, y);
         if (slot != null) {
+            if (net.neoforged.fml.ModList.get().isLoaded("curios")
+                    && dev.equipmentstructure.api.compat.curios.client.CuriosSlotPresentation.click(menu, slot, false, button)) return true;
             if (button == 1 && menu.getCarried().isEmpty() && spaces.openSource(slot)) return true;
             if (button == 0 || button == 1) transfer(slot, quickMove);
             return true;
@@ -345,16 +378,21 @@ final class EquipmentAssemblyGridView {
         return inside(x, y, 104, 2, 176, 162) || GridSidebarLayout.contains(x, y, snapshot.definitions().size());
     }
 
+    private static ItemStack slotDisplay(ResourceLocation id, ItemStack item) {
+        return net.neoforged.fml.ModList.get().isLoaded("curios")
+                ? dev.equipmentstructure.api.compat.curios.client.CuriosSlotPresentation.display(id, item) : item;
+    }
+
     private void transfer(ResourceLocation slot, boolean quickMove) {
         if (structure == null) return;
         if (menu.getCarried().isEmpty()) {
-            if (structure.component(slot).isPresent()) {
+            if (structure.component(slot).isPresent() || !playerItems.getOrDefault(slot, ItemStack.EMPTY).isEmpty()) {
                 selected = null;
                 send(quickMove ? GridActionPayload.Action.QUICK_REMOVE : GridActionPayload.Action.REMOVE, slot, Map.of());
             }
             return; // Empty interfaces never activate a staging mirror.
         }
-        var component = EquipmentComponentRegistry.fromItemStack(menu.getCarried()).orElse(null);
+        var component = menu.readComponent(menu.getCarried(), slot).orElse(null);
         var definition = structure.slot(slot).orElse(null);
         if (component == null || definition == null
                 || !definition.accepts(structure.equipmentType(), component)) { feedback("incompatible"); return; }

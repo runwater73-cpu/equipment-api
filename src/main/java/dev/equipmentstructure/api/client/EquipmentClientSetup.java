@@ -15,6 +15,13 @@ public final class EquipmentClientSetup {
     private EquipmentClientSetup() {}
     @SubscribeEvent
     public static void setup(FMLClientSetupEvent event) {
+        if (ModList.get().isLoaded("curios")) {
+            event.enqueueWork(dev.equipmentstructure.api.compat.curios.client.CuriosLayerPreviewRegistry::initializeEnigmatic);
+            dev.equipmentstructure.api.compat.curios.CuriosArmorCompat.clientRegistries(() -> {
+                var level = net.minecraft.client.Minecraft.getInstance().level;
+                return level == null ? null : level.registryAccess();
+            });
+        }
         ModList.get().getModContainerById(EquipmentStructureApiMod.MOD_ID).orElseThrow()
                 .registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
     }
