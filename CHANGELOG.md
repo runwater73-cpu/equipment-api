@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0-alpha.2
+
+- Show localized Curios slot types, original accessory descriptions and current native removal conditions in component details. Keep internal editor slot IDs behind advanced tooltips.
+- Add per-accessory native attribute modifier sections to the attribute details page, using the installed type/index and original tooltip hooks. Keep equipment values separate; this display never applies gameplay modifiers or ticks.
+- Render original item models for armor accessories without a wearable renderer. Reuse the same fallback in the editor and native world layer, including saved poses, selection, visibility and native render toggles. Preserve registered Curios renderers and external-layer adapters.
+- Filter the Eternal Covenant panel to actual player bindings and free stable indices that accept declared bindings. Ordinary armor accessories no longer appear there; transient capacity remains on the corresponding equipment template.
+
 ## 0.2.0-alpha.1
 
 - Add optional Curios 9.5.x integration for NeoForge 1.21.1. Armor stores the original accessory items and provides the worn contents to the native Curios inventory, tick, attribute, event and synchronization paths.

@@ -54,6 +54,12 @@ public final class EnigmaticSmokeFixtures {
         CuriosArmorCompat.beginNativeLoad();
         try { CuriosApi.getCuriosInventory(p).orElseThrow().reset(); }
         finally { CuriosArmorCompat.endNativeLoad(); }
+        if (Boolean.getBoolean("equipment_structure_api.displaySmoke")) {
+            step = 70;
+            p.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+            for (var slot : EquipmentSlot.values()) p.setItemSlot(slot, ItemStack.EMPTY);
+            return;
+        }
         if (Boolean.getBoolean("equipment_structure_api.unbindSmoke")) { step = 60; return; }
         if (Boolean.getBoolean("equipment_structure_api.bindingSmoke")) {
             step = 40;
@@ -79,6 +85,27 @@ public final class EnigmaticSmokeFixtures {
         if (++wait < 45) return;
         try {
             switch (step) {
+                case 70 -> {
+                    check(PlayerBoundCurios.install(player, new CuriosSlotKey("ring", 0, false), new ItemStack(EnigmaticItems.CURSED_RING.get())), "display fixture player binding");
+                    armor = new ItemStack(Items.DIAMOND_CHESTPLATE);
+                    installPart(armor, "ring", 1, EnigmaticItems.IRON_RING.get());
+                    installPart(armor, "charm", 0, EnigmaticItems.HELL_BLADE_CHARM.get());
+                    installPart(armor, "amulet", 0, EnigmaticItems.ENIGMATIC_AMULET_RED.get());
+                    installPart(armor, "back", 0, EnigmaticItems.MAJESTIC_ELYTRA.get());
+                    player.getInventory().setItem(0, armor); open();
+                }
+                case 71 -> {
+                    if (player.containerMenu instanceof EquipmentAssemblyMenu) return;
+                    equipFromInventory();
+                    check(AppearancePoseStorage.read(EquipmentStructureApi.component(armor, new CuriosSlotKey("charm", 0, false).slotId()).orElseThrow())
+                            .orElseThrow().transform().position().x() == 2, "fallback model pose saved on server");
+                    open(); // Empty-hand panel with the ordinary ring still owned by worn armor.
+                }
+                case 72 -> {
+                    check(!CuriosBindingActions.keys(player).contains(new CuriosSlotKey("ring", 1, false)), "ordinary ring excluded from server panel");
+                    if (player.containerMenu instanceof EquipmentAssemblyMenu) return;
+                    finish("DISPLAY_PASSED localized details, native attributes, fallback editor/world model, saved pose and binding panel filtering"); return;
+                }
                 case 0 -> { open(); }
                 case 1 -> {
                     if (player.containerMenu instanceof EquipmentAssemblyMenu) return;

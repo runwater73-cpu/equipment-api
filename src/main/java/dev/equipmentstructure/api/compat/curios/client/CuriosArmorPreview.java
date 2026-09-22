@@ -91,7 +91,11 @@ public final class CuriosArmorPreview {
                     var displayItem = item;
                     if (!externalLayers.containsKey(item.getItem())) externalLayers.put(item.getItem(), CuriosLayerPreviewRegistry.create(item, parent));
                     var layer = externalLayers.get(item.getItem());
-                    if (layer == null) continue;
+                    if (layer == null) {
+                        CuriosRenderBridge.render(CuriosItemModelRenderer.INSTANCE, item, context, poses, parent, target,
+                                light, 0, 0, 0, 0, 0, 0, capture);
+                        continue;
+                    }
                     poses.pushPose();
                     try {
                         if (CuriosRenderBridge.apply(displayItem, context, poses, model, capture))

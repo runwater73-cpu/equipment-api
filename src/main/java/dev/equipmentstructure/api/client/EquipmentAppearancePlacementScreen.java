@@ -643,12 +643,21 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
         var definition = structure.slot(slotId).orElse(null);
         var part = structure.component(slotId).orElse(null);
         if (definition == null || part == null) return entryName(slotId).copy().append("\n").append(slotId.toString()).append(suffix);
-        return Component.translatable("gui.equipment_structure_api.placement.slot_info", slotName(slotId))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.slot_id_info", definition.id().toString()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.interface_info", definition.interfaceType().toString()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_type_info", definition.componentType().toString()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_info", names.get(slotId)))
-                .append(suffix);
+        var key = dev.equipmentstructure.api.compat.curios.CuriosSlotKey.parse(slotId).orElse(null);
+        Component interfaceName = key == null ? typeName(definition.interfaceType(), "interface")
+                : Component.translatableWithFallback("curios.identifier." + key.type(), key.type());
+        Component componentType = key == null ? typeName(definition.componentType(), "component_type") : interfaceName;
+        var tooltip = Component.translatable("gui.equipment_structure_api.placement.slot_info", slotName(slotId))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.interface_info", interfaceName))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_type_info", componentType))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_info", names.get(slotId)));
+        if (minecraft.options.advancedItemTooltips)
+            tooltip.append("\n").append(Component.translatable("gui.equipment_structure_api.placement.slot_id_info", definition.id().toString()));
+        return tooltip.append(suffix);
+    }
+
+    private static Component typeName(ResourceLocation id, String kind) {
+        return Component.translatableWithFallback(kind + "." + id.getNamespace() + "." + id.getPath().replace('/', '.'), id.toString());
     }
 
 }

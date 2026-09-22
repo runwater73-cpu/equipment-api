@@ -20,6 +20,7 @@ public final class CuriosLayerPreviewRegistry {
         FACTORIES.put(item, java.util.Objects.requireNonNull(factory));
     }
     public static boolean previewing() { return PREVIEW.get(); }
+    public static boolean hasAdapter(net.minecraft.world.item.Item item) { return FACTORIES.containsKey(BuiltInRegistries.ITEM.getKey(item)); }
     static void preview(Runnable render) {
         var previous = PREVIEW.get(); PREVIEW.set(true);
         try { render.run(); } finally { PREVIEW.set(previous); }

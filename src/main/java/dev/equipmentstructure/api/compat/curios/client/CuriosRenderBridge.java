@@ -47,7 +47,8 @@ public final class CuriosRenderBridge {
         var adjustment = presentation.pose();
         if (capture == null && adjustment.equals(AppearancePose.IDENTITY)) return true;
         var frame = new PoseStack();
-        CuriosRenderFrames.frame(item, context).apply(item, context, model, frame);
+        if (CuriosItemModelRenderer.usesFallback(item.getItem())) CuriosItemModelRenderer.frame(item, context, model, frame);
+        else CuriosRenderFrames.frame(item, context).apply(item, context, model, frame);
         // Reuse the editor's convention: 16 units per block, +Y up and +Z forward.
         frame.scale(1 / 16F, -1 / 16F, -1 / 16F);
         var basis = new Matrix4f(frame.last().pose());

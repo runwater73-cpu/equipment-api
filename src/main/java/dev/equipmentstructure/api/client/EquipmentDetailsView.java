@@ -54,9 +54,9 @@ final class EquipmentDetailsView {
         if (page == Page.ATTRIBUTES) {
             drawShort(graphics, font, Component.translatable(snapshot.uiDefinition().texts().stats()),
                     left + 16, top + 70, 364, snapshot.uiDefinition().accentColor());
-            prepareDocument(font, snapshot.equipmentStats(), ATTRIBUTE_TEXT.width(), true);
+            prepareDocument(font, snapshot.attributeDetails(), ATTRIBUTE_TEXT.width(), true);
             renderDocument(graphics, font, left, top, ATTRIBUTE_TEXT);
-            if (snapshot.equipmentStats().isEmpty()) {
+            if (snapshot.attributeDetails().isEmpty()) {
                 drawShort(graphics, font, text("no_attributes"), left + 16, top + 88, 360, 0xFF999999);
             }
         } else {
@@ -135,6 +135,14 @@ final class EquipmentDetailsView {
         for (Object value : rows) {
             if (attributes) {
                 var row = (EquipmentAssemblyDisplaySnapshot.EquipmentStatRow) value;
+                if (row.value().getString().isEmpty()) {
+                    for (var line : font.split(row.label(), width - 6)) {
+                        lines.add(new TextLine(0, y, line, row.color()));
+                        y += 12;
+                    }
+                    y += 8;
+                    continue;
+                }
                 var labels = font.split(row.label(), 136);
                 var values = font.split(row.value(), width - 152);
                 for (int index = 0; index < labels.size(); index++) lines.add(new TextLine(0, y + index * 12, labels.get(index), 0xFFAAAAAA));

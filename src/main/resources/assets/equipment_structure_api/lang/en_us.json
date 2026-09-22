@@ -454,5 +454,14 @@
   "gui.equipment_structure_api.curios.native_inactive": "Curios has disabled this slot: item retained, effects paused.",
   "gui.equipment_structure_api.curios.native_unavailable": "Native slot currently unavailable; stored items can still be recovered.",
   "gui.equipment_structure_api.curios.render_on": "Curios rendering: on (Alt + right-click to toggle).",
-  "gui.equipment_structure_api.curios.render_off": "Curios rendering: off (Alt + right-click to toggle)."
+  "gui.equipment_structure_api.curios.render_off": "Curios rendering: off (Alt + right-click to toggle).",
+  "gui.equipment_structure_api.curios.slot_type": "Accessory slot type: %s",
+  "gui.equipment_structure_api.curios.functional_detail": "Functional accessory: takes effect while its equipment is worn.",
+  "gui.equipment_structure_api.curios.cosmetic_detail": "Cosmetic accessory: changes appearance without granting attributes.",
+  "gui.equipment_structure_api.curios.native_removable": "Can currently be removed, subject to the accessory's original conditions.",
+  "gui.equipment_structure_api.curios.native_locked": "Cannot currently be removed; fulfill the accessory's original conditions.",
+  "gui.equipment_structure_api.curios.original_description": "Accessory description and effects",
+  "gui.equipment_structure_api.curios.accessory_attributes": "Installed accessory attributes",
+  "gui.equipment_structure_api.curios.attribute_context": "Accessory modifiers queried for the current player. They apply while the equipment is worn and the slot is active, and are separate from the equipment values above. See component details for special effects and conditions.",
+  "gui.equipment_structure_api.curios.no_numeric_attributes": "No numeric attributes provided; see component details for effects."
 }

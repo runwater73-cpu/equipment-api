@@ -1,4 +1,18 @@
-# 0.2.0-alpha.1 validation
+# 0.2.0-alpha.2 validation
+
+## Display and ownership fixes
+
+Alpha.2 reruns: 325 JUnit tests with zero failures/errors/skips; all 193 required GameTests with Curios; all 166 without Curios. Separate client/server runs pass the real-addon display scenario, the registered native Curios renderer/visibility scenario, and standalone installation/removal and item-transfer checks without Curios.
+
+The alpha.2 real-addon `-PdisplaySmoke=true` scenario uses the original Hell Blade Charm, Enigmatic Amulet, Majestic Elytra, an ordinary Iron Ring and a player-bound Seven Curses ring. Server/client `DISPLAY_PASSED` markers verify localized component details without encoded type IDs, native attack/negative armor modifier text, all three accessory geometries in the editor, a saved charm offset, and an Eternal Covenant panel that excludes the worn ordinary ring. Screenshots are inspected for wrapping, scrolling, actual item appearance and binding ownership.
+
+`CURIOS_DISPLAY_WORLD_PASSED` runs the actual mixed-in native world layer on an isolated, unticked wearer. It checks fallback geometry, the same model-unit position offset as the editor, saved visibility, native render off/on and no fallback without an equipment owner. Native renderers and registered external-layer adapters retain precedence over item models.
+
+The added GameTest covers a binding beside an ordinary armor item, a permanent capacity grant, a transient grant appearing on the correct template after its normal per-tick refresh, and a freed stable index becoming eligible for binding. The Curios matrix now contains 193 required tests.
+
+The following sections record the original alpha.1 acceptance baseline; alpha.2 rerun results are listed with the release artifacts.
+
+## Original compatibility baseline
 
 Minecraft 1.21.1, Java 21, Windows. Core and synthetic Curios tests use NeoForge 21.1.244; original Enigmatic Legacy+ tests use 21.1.249.
 
@@ -41,7 +55,7 @@ For the original-addon fixture add `-PincludeClientTest=true -PenigmaticSmoke=tr
 
 The fixtures expect disposable `run-smoke-server` and `run-smoke-client` directories, a loopback server on `127.0.0.1:25586`, and development authentication settings. Follow Minecraft's server EULA. Start `runSmokeServer`, wait for `Done`, then start `runSmokeClient` with identical properties. Fixtures reset the test player's inventory, may kill/respawn it, and stop the server after logout. Never run them on a real world. Some native addon missing-model warnings also occur with these original development JARs; assertion results and verified screenshots establish the tested behavior.
 
-Use a normal `clean build` without fixture flags or local addon JARs for distribution. Fixture-enabled builds reject JAR packaging. The normal artifact must contain only API code/resources, the license and 0.2.0-alpha.1 metadata; inspect both binary and sources JARs for accidental test or third-party contents.
+Use a normal `clean build` without fixture flags or local addon JARs for distribution. Fixture-enabled builds reject JAR packaging. The normal artifact must contain only API code/resources, the license and 0.2.0-alpha.2 metadata; inspect both binary and sources JARs for accidental test or third-party contents.
 
 ## Limits
 

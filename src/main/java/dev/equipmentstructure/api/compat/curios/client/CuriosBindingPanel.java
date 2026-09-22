@@ -57,9 +57,8 @@ public final class CuriosBindingPanel {
         var mc = Minecraft.getInstance(); var item = shown(key);
         var lines = new java.util.ArrayList<Component>();
         lines.add(Component.translatable("curios.identifier." + key.type()).append(" #" + (key.index() + 1)));
-        if (!item.isEmpty()) lines.add(item.getHoverName());
         CuriosSlotPresentation.tooltip(key.slotId(), item, lines);
-        lines.add(text(item.isEmpty() ? "binding_hint" : PlayerBoundCurios.bound(item, mc.player) ? "player_bound" : "armor_occupied"));
+        lines.add(text(item.isEmpty() ? "binding_hint" : "player_bound"));
         g.renderComponentTooltip(mc.font, lines, mx, my); return true;
     }
     private CuriosSlotKey keyAt(double mx, double my) {

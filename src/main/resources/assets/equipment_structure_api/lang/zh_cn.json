@@ -454,5 +454,14 @@
   "gui.equipment_structure_api.curios.native_inactive": "Curios 已停用此槽位：物品保留，效果暂停。",
   "gui.equipment_structure_api.curios.native_unavailable": "当前原生槽位不可用；已存物品仍可取回。",
   "gui.equipment_structure_api.curios.render_on": "Curios 模型显示：开启（Alt + 右键切换）。",
-  "gui.equipment_structure_api.curios.render_off": "Curios 模型显示：关闭（Alt + 右键切换）。"
+  "gui.equipment_structure_api.curios.render_off": "Curios 模型显示：关闭（Alt + 右键切换）。",
+  "gui.equipment_structure_api.curios.slot_type": "饰品槽位类型：%s",
+  "gui.equipment_structure_api.curios.functional_detail": "功能饰品：随所属装备穿戴生效。",
+  "gui.equipment_structure_api.curios.cosmetic_detail": "外观饰品：仅替换显示，不提供功能属性。",
+  "gui.equipment_structure_api.curios.native_removable": "当前允许取下；遵循饰品原有条件。",
+  "gui.equipment_structure_api.curios.native_locked": "当前无法取下；须满足饰品原有解除条件。",
+  "gui.equipment_structure_api.curios.original_description": "饰品说明与效果",
+  "gui.equipment_structure_api.curios.accessory_attributes": "已安装饰品的属性",
+  "gui.equipment_structure_api.curios.attribute_context": "以下为饰品按当前玩家条件提供的属性修正。穿戴装备且槽位启用时生效；未合并进上方装备数值。特殊效果及触发条件见部件详情。",
+  "gui.equipment_structure_api.curios.no_numeric_attributes": "未提供可显示的数值属性；效果说明见部件详情。"
 }

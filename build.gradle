@@ -71,6 +71,7 @@ neoForge {
             systemProperty 'equipment_structure_api.boundResume', providers.gradleProperty('boundResume').getOrElse('false')
             systemProperty 'equipment_structure_api.bindingSmoke', providers.gradleProperty('bindingSmoke').getOrElse('false')
             systemProperty 'equipment_structure_api.unbindSmoke', providers.gradleProperty('unbindSmoke').getOrElse('false')
+            systemProperty 'equipment_structure_api.displaySmoke', providers.gradleProperty('displaySmoke').getOrElse('false')
         }
     }
     mods { "${mod_id}" { sourceSet(sourceSets.main) } }

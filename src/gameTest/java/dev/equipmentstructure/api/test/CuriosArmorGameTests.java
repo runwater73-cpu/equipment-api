@@ -17,6 +17,34 @@ import top.theillusivec4.curios.api.CuriosApi;
 @PrefixGameTestTemplate(false)
 public final class CuriosArmorGameTests {
     @GameTest(template = "empty")
+    public static void bindingPanelExcludesArmorItemsAndTemporaryCapacity(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        helper.assertTrue(CuriosBindingActions.keys(player).contains(KEY), "empty stable slot accepts declared bindings without armor");
+        var armor = install(player);
+        helper.assertTrue(!CuriosBindingActions.keys(player).contains(KEY), "ordinary armor item must not appear in binding panel");
+        var handler = CuriosApi.getCuriosInventory(player).orElseThrow().getStacksHandler(KEY.type()).orElseThrow();
+        handler.grow(1);
+        var second = new CuriosSlotKey(KEY.type(), 1, false);
+        helper.assertTrue(CuriosBindingActions.keys(player).contains(second), "permanently unlocked empty index is eligible");
+        helper.assertTrue(PlayerBoundCurios.install(player, second, new ItemStack(Items.DIAMOND)), "binding coexists with ordinary armor item");
+        helper.assertTrue(CuriosBindingActions.keys(player).equals(java.util.List.of(second)), "only the player binding is shown");
+        var modifier = new net.minecraft.world.entity.ai.attributes.AttributeModifier(
+                net.minecraft.resources.ResourceLocation.parse("equipment_structure_api:display_capacity"), 1,
+                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE);
+        handler.addTransientModifier(modifier);
+        helper.assertTrue(handler.getSlots() == 3, "native temporary capacity is granted");
+        // Templates intentionally refresh at most once per tick; check the next ordinary refresh.
+        helper.runAfterDelay(1, () -> {
+            CuriosEquipmentTemplates.prepare(armor, player);
+            var third = new CuriosSlotKey(KEY.type(), 2, false);
+            helper.assertTrue(EquipmentStructureApi.slots(armor).stream().anyMatch(s -> s.id().equals(third.slotId())), "temporary grant belongs to its equipment template");
+            helper.assertTrue(!CuriosBindingActions.keys(player).contains(third), "temporary grant is not a new binding slot");
+            nativeInventory(player).extractItem(0, 1, false);
+            helper.assertTrue(CuriosBindingActions.keys(player).contains(KEY), "freed stable index becomes eligible again");
+            helper.succeed();
+        });
+    }
+    @GameTest(template = "empty")
     public static void privateNativeSlotsAreNotAutomaticallyTakenOver(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         var inv = CuriosApi.getCuriosInventory(player).orElseThrow();

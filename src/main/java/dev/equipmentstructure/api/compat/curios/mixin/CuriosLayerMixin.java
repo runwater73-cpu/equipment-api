@@ -14,6 +14,13 @@ import top.theillusivec4.curios.client.render.CuriosLayer;
 
 @Mixin(value = CuriosLayer.class, remap = false)
 abstract class CuriosLayerMixin {
+    @WrapOperation(method = "lambda$render$1", at = @At(value = "INVOKE", target = "Ltop/theillusivec4/curios/api/client/CuriosRendererRegistry;getRenderer(Lnet/minecraft/world/item/Item;)Ljava/util/Optional;"))
+    private java.util.Optional<ICurioRenderer> equipment$itemFallback(net.minecraft.world.item.Item item,
+            Operation<java.util.Optional<ICurioRenderer>> original) {
+        var renderer = original.call(item);
+        return renderer.isPresent() || dev.equipmentstructure.api.compat.curios.client.CuriosLayerPreviewRegistry.hasAdapter(item)
+                ? renderer : java.util.Optional.of(dev.equipmentstructure.api.compat.curios.client.CuriosItemModelRenderer.INSTANCE);
+    }
     @WrapOperation(method = "lambda$render$0", at = @At(value = "INVOKE", target = "Ltop/theillusivec4/curios/api/client/ICurioRenderer;render(Lnet/minecraft/world/item/ItemStack;Ltop/theillusivec4/curios/api/SlotContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/entity/RenderLayerParent;Lnet/minecraft/client/renderer/MultiBufferSource;IFFFFFF)V"))
     @SuppressWarnings("unchecked")
     private void equipment$adjustNativeRenderer(ICurioRenderer renderer, ItemStack stack, SlotContext context,

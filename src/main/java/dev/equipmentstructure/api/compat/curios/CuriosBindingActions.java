@@ -24,8 +24,12 @@ public final class CuriosBindingActions {
             if (!CuriosArmorCompat.managesType(player, entry.getKey())) return;
             for (int i = 0; i < Math.min(128, entry.getValue().getSlots()) && result.size() < 256; i++) {
                 var key = new CuriosSlotKey(entry.getKey(), i, false);
-                if (types.contains(entry.getKey()) && PlayerBoundCurios.stableSlot(player, key)
-                        || !PlayerBoundCurios.item(player, key.slotId()).isEmpty()) result.add(key);
+                var item = entry.getValue().getStacks().getStackInSlot(i);
+                // A shared native index has one owner. Armor-owned items belong in the equipment
+                // panel, even when their type also accepts a declared player binding.
+                if (PlayerBoundCurios.bound(item, player)
+                        || item.isEmpty() && types.contains(entry.getKey()) && PlayerBoundCurios.stableSlot(player, key))
+                    result.add(key);
             }
         });
         return List.copyOf(result);

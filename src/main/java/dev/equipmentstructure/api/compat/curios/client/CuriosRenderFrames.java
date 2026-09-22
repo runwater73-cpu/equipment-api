@@ -42,4 +42,8 @@ public final class CuriosRenderFrames {
                 CuriosArmorCompat.definitions(context.entity()).profile(context.identifier()).armorSlot()
                         == net.minecraft.world.entity.EquipmentSlot.HEAD ? Bone.HEAD : Bone.BODY);
     }
+    static Frame itemFrame(ItemStack item, SlotContext context, net.minecraft.world.entity.EquipmentSlot position) {
+        return ITEMS.getOrDefault(BuiltInRegistries.ITEM.getKey(item.getItem()), SLOTS.getOrDefault(context.identifier(),
+                switch (position) { case HEAD -> Bone.HEAD; case LEGS, FEET -> Bone.LEFT_LEG; default -> Bone.BODY; }));
+    }
 }
