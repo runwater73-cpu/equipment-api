@@ -49,6 +49,7 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
     private AppearanceTransform selectedAnchor;
     private AppearanceOrbitGizmo orbitGizmo;
     private AppearancePlan capturedPlan;
+    private final Map<ResourceLocation, Matrix4f> nativeFrames = new HashMap<>();
     private ItemStack preview;
     private int mode, axis = -1, dragButton = -1, listOffset;
     private boolean dragPart, dragOrbit, dragCheckpoint;
@@ -262,16 +263,25 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
         try {
             g.pose().translate((12 + previewRight()) / 2F + panX, (previewTop() + previewBottom()) / 2F + panY, 150);
             Lighting.setupFor3DItems(); selectionGeometry = new AppearancePreviewSelection(g.bufferSource(), selected);
-            capturedFrame = null; capturedPlan = null; updateSelectedFrame();
+            capturedFrame = null; capturedPlan = null; nativeFrames.clear(); updateSelectedFrame();
             if (previewRenderer == null) previewRenderer = new EquipmentAppearancePreviewRenderer(minecraft);
             previewRenderer.render(preview, selected, g.pose(), selectionGeometry, zoom, yaw, pitch,
-                    LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, this::captureFrame);
+                    LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, this::captureFrame,
+                    (id, frame) -> { nativeFrames.put(id, new Matrix4f(frame)); updateSelectedFrame(); });
             g.flush();
         } finally { g.pose().popPose(); g.disableScissor(); Lighting.setupFor3DItems(); }
     }
     private void captureFrame(Matrix4f model, AppearancePlan plan) { capturedFrame = new Matrix4f(model); capturedPlan = plan; updateSelectedFrame(); }
     private void updateSelectedFrame() {
         gizmo.clear(); authorAnchor.clear(); selectedAnchor = null; orbitGizmo = null;
+        if (selected != null && nativeFrames.containsKey(selected)) {
+            var frame = nativeFrames.get(selected);
+            var p = pose().transform().position();
+            authorAnchor.update(frame, 0, 0, 0);
+            gizmo.update(frame, (float) p.x(), (float) p.y(), (float) p.z());
+            selectedAnchor = AppearanceTransform.IDENTITY;
+            return;
+        }
         if (selected == null || capturedFrame == null || capturedPlan == null) return;
         var placement = capturedPlan.placements().stream().filter(p -> p.slotId().equals(selected)).findFirst().orElse(null);
         if (placement == null) return;
@@ -633,12 +643,21 @@ public final class EquipmentAppearancePlacementScreen extends Screen implements 
         var definition = structure.slot(slotId).orElse(null);
         var part = structure.component(slotId).orElse(null);
         if (definition == null || part == null) return entryName(slotId).copy().append("\n").append(slotId.toString()).append(suffix);
-        return Component.translatable("gui.equipment_structure_api.placement.slot_info", slotName(slotId))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.slot_id_info", definition.id().toString()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.interface_info", definition.interfaceType().toString()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_type_info", definition.componentType().toString()))
-                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_info", names.get(slotId)))
-                .append(suffix);
+        var key = dev.equipmentstructure.api.compat.curios.CuriosSlotKey.parse(slotId).orElse(null);
+        Component interfaceName = key == null ? typeName(definition.interfaceType(), "interface")
+                : Component.translatableWithFallback("curios.identifier." + key.type(), key.type());
+        Component componentType = key == null ? typeName(definition.componentType(), "component_type") : interfaceName;
+        var tooltip = Component.translatable("gui.equipment_structure_api.placement.slot_info", slotName(slotId))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.interface_info", interfaceName))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_type_info", componentType))
+                .append("\n").append(Component.translatable("gui.equipment_structure_api.placement.component_info", names.get(slotId)));
+        if (minecraft.options.advancedItemTooltips)
+            tooltip.append("\n").append(Component.translatable("gui.equipment_structure_api.placement.slot_id_info", definition.id().toString()));
+        return tooltip.append(suffix);
+    }
+
+    private static Component typeName(ResourceLocation id, String kind) {
+        return Component.translatableWithFallback(kind + "." + id.getNamespace() + "." + id.getPath().replace('/', '.'), id.toString());
     }
 
 }

@@ -8,15 +8,44 @@ group = mod_group_id
 base.archivesName = mod_id
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 java.withSourcesJar()
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.theillusivec4.top/' }
+}
 
 def gameTests = providers.gradleProperty('includeGameTests').map { it.toBoolean() }.getOrElse(false)
 def clientTest = providers.gradleProperty('includeClientTest').map { it.toBoolean() }.getOrElse(false)
+def withoutCurios = providers.gradleProperty('withoutCurios').map { it.toBoolean() }.getOrElse(false)
+def enigmaticSmoke = providers.gradleProperty('enigmaticSmoke').map { it.toBoolean() }.getOrElse(false)
+def artifactsSmoke = providers.gradleProperty('artifactsSmoke').map { it.toBoolean() }.getOrElse(false)
+def celestialSmoke = providers.gradleProperty('celestialSmoke').map { it.toBoolean() }.getOrElse(false)
+def compatTestMods = providers.gradleProperty('compatTestMods').orNull
+def compatTestLibraries = providers.gradleProperty('compatTestLibraries').orNull
+if (compatTestLibraries != null && compatTestMods == null)
+    throw new GradleException('Addon compile libraries require a local compatibility fixture.')
+if (celestialSmoke && (!clientTest || compatTestMods == null || withoutCurios || enigmaticSmoke || artifactsSmoke
+        || providers.gradleProperty('curiosSmoke').map { it.toBoolean() }.getOrElse(false)))
+    throw new GradleException('Celestial/L2 smoke requires client fixtures, local mods and Curios, without another addon fixture.')
+if (compatTestMods != null && !clientTest && !gameTests)
+    throw new GradleException('Local compatibility mods require a fixture run, never a release build.')
+if (artifactsSmoke && (!clientTest || compatTestMods == null || withoutCurios || enigmaticSmoke
+        || providers.gradleProperty('curiosSmoke').map { it.toBoolean() }.getOrElse(false)))
+    throw new GradleException('Artifacts smoke requires client fixtures, local mods and Curios, without another addon fixture.')
 if (gameTests) {
     sourceSets.main.java.srcDir('src/gameTest/java')
     sourceSets.main.resources.srcDirs('src/gameTest/resources', 'src/connectionTest/resources')
 }
-if (clientTest) { sourceSets.main.java.srcDir('src/clientTest/java') }
+if (clientTest) {
+    sourceSets.main.java.srcDir('src/clientTest/java')
+    if (!enigmaticSmoke && !artifactsSmoke && !celestialSmoke) sourceSets.main.resources.srcDir('src/clientTest/resources')
+}
+if (!enigmaticSmoke) sourceSets.main.java.exclude('**/smoke/EnigmaticSmoke*.java')
+if (!artifactsSmoke) sourceSets.main.java.exclude('**/smoke/ArtifactsSmoke*.java')
+if (!celestialSmoke) sourceSets.main.java.exclude('**/smoke/CelestialSmoke*.java')
+if (withoutCurios) {
+    // NeoForge discovers @GameTestHolder classes before the conditional registration event.
+    sourceSets.main.java.exclude('**/test/CuriosArmorGameTests.java', '**/smoke/CuriosSmoke*.java')
+}
 sourceSets.main.resources {
     srcDir('src/generated/resources')
     exclude('**/*.bbmodel', '**/.cache/**')
@@ -31,12 +60,12 @@ neoForge {
         if (clientTest) {
             smokeServer {
                 server()
-                gameDirectory = project.file('run-smoke-server')
+                gameDirectory = project.file(celestialSmoke ? 'run-celestial-server' : 'run-smoke-server')
                 programArgument '--nogui'
             }
             smokeClient {
                 client()
-                gameDirectory = project.file('run-smoke-client')
+                gameDirectory = project.file(celestialSmoke ? 'run-celestial-client' : 'run-smoke-client')
                 programArguments.addAll('--quickPlayMultiplayer', '127.0.0.1:25586', '--width', '1280', '--height', '900')
             }
         }
@@ -47,12 +76,32 @@ neoForge {
             gameDirectory = project.file('run-gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
-        configureEach { logLevel = org.slf4j.event.Level.INFO }
+        configureEach {
+            logLevel = org.slf4j.event.Level.INFO
+            systemProperty 'equipment_structure_api.curiosSmoke', providers.gradleProperty('curiosSmoke').getOrElse('false')
+            systemProperty 'equipment_structure_api.enigmaticSmoke', enigmaticSmoke.toString()
+            systemProperty 'equipment_structure_api.enigmaticResume', providers.gradleProperty('enigmaticResume').getOrElse('false')
+            systemProperty 'equipment_structure_api.boundResume', providers.gradleProperty('boundResume').getOrElse('false')
+            systemProperty 'equipment_structure_api.bindingSmoke', providers.gradleProperty('bindingSmoke').getOrElse('false')
+            systemProperty 'equipment_structure_api.unbindSmoke', providers.gradleProperty('unbindSmoke').getOrElse('false')
+            systemProperty 'equipment_structure_api.displaySmoke', providers.gradleProperty('displaySmoke').getOrElse('false')
+            systemProperty 'equipment_structure_api.artifactsSmoke', artifactsSmoke.toString()
+            systemProperty 'equipment_structure_api.celestialSmoke', celestialSmoke.toString()
+        }
     }
     mods { "${mod_id}" { sourceSet(sourceSets.main) } }
 }
 dependencies {
+    compileOnly 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
+    if (!withoutCurios && compatTestMods == null) {
+        runtimeOnly 'top.theillusivec4.curios:curios-neoforge:9.5.1+1.21.1'
+    }
+    if (compatTestMods != null) {
+        compileOnly fileTree(dir: compatTestMods, include: '*.jar')
+        runtimeOnly fileTree(dir: compatTestMods, include: '*.jar')
+    }
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    if (compatTestLibraries != null) compileOnly fileTree(dir: compatTestLibraries, include: '*.jar')
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.0'
 }
 sourceSets.test {

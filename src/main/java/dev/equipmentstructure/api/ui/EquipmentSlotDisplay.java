@@ -44,6 +44,12 @@ public record EquipmentSlotDisplay(Optional<String> nameKey, Optional<ResourceLo
     }
 
     public Component name(ResourceLocation slotId) {
+        var nativeSlot = dev.equipmentstructure.api.compat.curios.CuriosSlotKey.parse(slotId);
+        if (nativeSlot.isPresent() && nameKey.filter(key -> key.startsWith("curios.identifier.")).isPresent()) {
+            var key = nativeSlot.get();
+            var name = Component.translatableWithFallback(nameKey(slotId), key.type()).append(" #" + (key.index() + 1));
+            return key.cosmetic() ? name.append(Component.translatable("gui.equipment_structure_api.curios.cosmetic")) : name;
+        }
         return Component.translatableWithFallback(nameKey(slotId), slotId.toString());
     }
 

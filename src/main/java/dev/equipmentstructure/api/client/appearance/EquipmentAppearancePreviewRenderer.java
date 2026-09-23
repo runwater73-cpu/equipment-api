@@ -21,6 +21,7 @@ public final class EquipmentAppearancePreviewRenderer {
     private final Minecraft minecraft;
     private EquipmentArmorPreviewRenderer humanoid;
     private EquipmentAnimalArmorPreviewRenderer animal;
+    private dev.equipmentstructure.api.compat.curios.client.CuriosArmorPreview curios;
     private long generation = -1;
 
     public EquipmentAppearancePreviewRenderer(Minecraft minecraft) {
@@ -41,10 +42,16 @@ public final class EquipmentAppearancePreviewRenderer {
     public void render(ItemStack stack, ResourceLocation selected, PoseStack poses, MultiBufferSource buffers,
                        float zoom, float yaw, float pitch, int light, int overlay,
                        BiConsumer<Matrix4f, AppearancePlan> capture) {
+        render(stack, selected, poses, buffers, zoom, yaw, pitch, light, overlay, capture, (id, frame) -> {});
+    }
+    public void render(ItemStack stack, ResourceLocation selected, PoseStack poses, MultiBufferSource buffers,
+                       float zoom, float yaw, float pitch, int light, int overlay,
+                       BiConsumer<Matrix4f, AppearancePlan> capture, BiConsumer<ResourceLocation, Matrix4f> nativeCapture) {
         long current = AppearanceResourceReloadListener.generation();
         if (generation != current) {
             humanoid = null;
             animal = null;
+            curios = null;
             generation = current;
         }
         Kind kind = kind(stack);
@@ -58,6 +65,10 @@ public final class EquipmentAppearancePreviewRenderer {
                 if (humanoid == null) humanoid = new EquipmentArmorPreviewRenderer(minecraft);
                 humanoid.render(stack, EquipmentArmorPreviewRenderer.equipmentSlot(stack).orElseThrow(),
                         selected, poses, buffers, light, overlay, capture);
+                if (net.neoforged.fml.ModList.get().isLoaded("curios")) {
+                    if (curios == null) curios = new dev.equipmentstructure.api.compat.curios.client.CuriosArmorPreview();
+                    curios.render(stack, EquipmentArmorPreviewRenderer.equipmentSlot(stack).orElseThrow(), poses, buffers, light, nativeCapture);
+                }
             } else if (kind == Kind.HORSE_ARMOR || kind == Kind.WOLF_ARMOR) {
                 poses.translate(0, kind == Kind.HORSE_ARMOR ? -0.5 : -1, 0);
                 if (animal == null) animal = new EquipmentAnimalArmorPreviewRenderer(minecraft);

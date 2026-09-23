@@ -74,9 +74,9 @@ public final class EquipmentComponentRegistry {
             var definition = get(instance.id());
             if (definition.isEmpty()) return Optional.empty();
             return createItemStack(instance).filter(stack ->
-                    EquipmentComponentInspection.readRestored(stack).component()
-                            .filter(restored -> EquipmentComponentInspection.sameInstance(instance, restored)).isPresent()
-                            && get(instance.id()).equals(definition));
+                    EquipmentSlotItemAdapters.restores(instance, stack).orElseGet(() -> EquipmentComponentInspection.readRestored(stack).component()
+                             .filter(restored -> EquipmentComponentInspection.sameInstance(instance, restored)).isPresent()
+                            ) && get(instance.id()).equals(definition));
         }, Optional.empty());
     }
 

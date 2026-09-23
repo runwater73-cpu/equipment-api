@@ -48,6 +48,7 @@ public record EquipmentAssemblyDisplaySnapshot(
         List<EquipmentSlotDefinition> definitions,
         Component equipmentName,
         List<EquipmentStatRow> equipmentStats,
+        List<EquipmentStatRow> attributeDetails,
         Map<ResourceLocation, ComponentInfoSnapshot> componentInfo,
         Map<ResourceLocation, Component> interfaceNames
 ) {
@@ -68,6 +69,7 @@ public record EquipmentAssemblyDisplaySnapshot(
         equipment = equipment.copy();
         definitions = List.copyOf(definitions);
         equipmentStats = List.copyOf(equipmentStats);
+        attributeDetails = List.copyOf(attributeDetails);
         componentInfo = Map.copyOf(componentInfo);
         interfaceNames = Map.copyOf(interfaceNames);
     }
@@ -102,12 +104,15 @@ public record EquipmentAssemblyDisplaySnapshot(
         });
         Map<ResourceLocation, ComponentInfoSnapshot> componentInfo =
                 readComponentInfo(equipment, definitions, uiDefinition, attributeView);
+        List<EquipmentStatRow> details = new ArrayList<>(stats);
+        if (net.neoforged.fml.ModList.get().isLoaded("curios"))
+            dev.equipmentstructure.api.compat.curios.client.CuriosDetailPresentation.appendAttributes(componentInfo, definitions, details);
         Map<ResourceLocation, Component> interfaceNames = new LinkedHashMap<>();
         for (EquipmentSlotDefinition definition : definitions) {
             interfaceNames.put(definition.id(), uiDefinition.slot(definition.id()).name(definition.id()));
         }
         return new EquipmentAssemblyDisplaySnapshot(equipment, hostId, uiDefinition,
-                definitions, equipment.getHoverName(), stats, componentInfo, interfaceNames);
+                definitions, equipment.getHoverName(), stats, details, componentInfo, interfaceNames);
     }
 
     public Optional<ComponentInfoSnapshot> selectedComponent(ResourceLocation selectedInterface) {
@@ -166,24 +171,31 @@ public record EquipmentAssemblyDisplaySnapshot(
             if (installed.isPresent()) {
                 EquipmentComponentInstance component = installed.get();
                 lines.add(new InfoLine(Component.translatable(labels.installedComponent()), 0xFFB8B8B8));
-                lines.add(new InfoLine(labeled(labels.componentType(), component.componentType(),
-                        "component_type"), 0xFFAAAAAA));
-                lines.add(new InfoLine(labeled(labels.componentInterface(), definition.interfaceType(),
-                        "interface"), 0xFFAAAAAA));
+                boolean nativeCurio = net.neoforged.fml.ModList.get().isLoaded("curios")
+                        && dev.equipmentstructure.api.compat.curios.CuriosSlotKey.parse(definition.id()).isPresent();
+                if (nativeCurio) {
+                    dev.equipmentstructure.api.compat.curios.client.CuriosDetailPresentation.appendComponent(
+                            equipment, definition, componentStack, lines);
+                } else {
+                    lines.add(new InfoLine(labeled(labels.componentType(), component.componentType(),
+                            "component_type"), 0xFFAAAAAA));
+                    lines.add(new InfoLine(labeled(labels.componentInterface(), definition.interfaceType(),
+                            "interface"), 0xFFAAAAAA));
 
-                List<EquipmentAttributeContribution> contributions =
-                        attributeView.contributions(definition.id());
-                if (!contributions.isEmpty()) {
-                    String attributes = contributions.stream()
-                            .map(EquipmentAssemblyDisplaySnapshot::formatContribution)
-                            .reduce((left, right) -> left + ", " + right).orElse("");
-                    lines.add(new InfoLine(Component.translatable(labels.componentAttributes())
-                            .append(": ").append(attributes), 0xFFAAAAAA));
+                    List<EquipmentAttributeContribution> contributions =
+                            attributeView.contributions(definition.id());
+                    if (!contributions.isEmpty()) {
+                        String attributes = contributions.stream()
+                                .map(EquipmentAssemblyDisplaySnapshot::formatContribution)
+                                .reduce((left, right) -> left + ", " + right).orElse("");
+                        lines.add(new InfoLine(Component.translatable(labels.componentAttributes())
+                                .append(": ").append(attributes), 0xFFAAAAAA));
+                    }
+                    String stateKey = EquipmentComponentRegistry.get(component.id())
+                            .map(value -> value.removable() ? labels.removable() : labels.locked())
+                            .orElse(labels.unknownComponent());
+                    lines.add(new InfoLine(Component.translatable(stateKey), 0xFF888888));
                 }
-                String stateKey = EquipmentComponentRegistry.get(component.id())
-                        .map(value -> value.removable() ? labels.removable() : labels.locked())
-                        .orElse(labels.unknownComponent());
-                lines.add(new InfoLine(Component.translatable(stateKey), 0xFF888888));
 
                 // A component author may append or replace the standard rows
                 // with data derived from the immutable component context.

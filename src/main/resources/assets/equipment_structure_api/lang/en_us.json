@@ -1,4 +1,5 @@
 {
+  "gui.equipment_structure_api.curios.cosmetic": " (Cosmetic)",
   "interface.equipment_structure_api.armor_decoration": "Armor Decoration",
   "slot.equipment_structure_api.armor_decoration": "Armor Decoration",
   "interface.equipment_structure_api.pendant": "Pendant",
@@ -441,5 +442,26 @@
   "gui.equipment_structure_api.grid.status.no_space": "No free position fits this component's shape.",
   "gui.equipment_structure_api.grid.status.placement_rejected": "The part cannot be placed here.",
   "gui.equipment_structure_api.grid.status.unknown_slot": "This interface no longer exists.",
-  "gui.equipment_structure_api.grid.status.empty_slot": "This interface has no installed component."
+  "gui.equipment_structure_api.grid.status.empty_slot": "This interface has no installed component.",
+  "gui.equipment_structure_api.curios.player_bound": "Player-bound: stays active without armor, after armor swaps or breakage. Original removal conditions apply.",
+  "gui.equipment_structure_api.curios.bindings": "Eternal Covenant",
+  "gui.equipment_structure_api.curios.binding_title": "An oath no realm can sever.",
+  "gui.equipment_structure_api.curios.binding_description": "When the oath is etched into the soul, equipment becomes more than mortal craft.\nBeyond death, oblivion, and the boundaries of time and space, it will always answer your call.",
+  "gui.equipment_structure_api.curios.binding_hint": "No armor needed. Base or permanent slots only. Changing gear keeps bindings.",
+  "gui.equipment_structure_api.curios.equipment_tab": "Equipment",
+  "gui.equipment_structure_api.curios.no_bindings": "No permanent binding slots are available.",
+  "gui.equipment_structure_api.curios.armor_occupied": "This slot is occupied by an accessory in worn armor.",
+  "gui.equipment_structure_api.curios.native_inactive": "Curios has disabled this slot: item retained, effects paused.",
+  "gui.equipment_structure_api.curios.native_unavailable": "Native slot currently unavailable; stored items can still be recovered.",
+  "gui.equipment_structure_api.curios.render_on": "Curios rendering: on (Alt + right-click to toggle).",
+  "gui.equipment_structure_api.curios.render_off": "Curios rendering: off (Alt + right-click to toggle).",
+  "gui.equipment_structure_api.curios.slot_type": "Accessory slot type: %s",
+  "gui.equipment_structure_api.curios.functional_detail": "Functional accessory: takes effect while its equipment is worn.",
+  "gui.equipment_structure_api.curios.cosmetic_detail": "Cosmetic accessory: changes appearance without granting attributes.",
+  "gui.equipment_structure_api.curios.native_removable": "Can currently be removed, subject to the accessory's original conditions.",
+  "gui.equipment_structure_api.curios.native_locked": "Cannot currently be removed; fulfill the accessory's original conditions.",
+  "gui.equipment_structure_api.curios.original_description": "Accessory description and effects",
+  "gui.equipment_structure_api.curios.accessory_attributes": "Installed accessory attributes",
+  "gui.equipment_structure_api.curios.attribute_context": "Accessory modifiers queried for the current player. They apply while the equipment is worn and the slot is active, and are separate from the equipment values above. See component details for special effects and conditions.",
+  "gui.equipment_structure_api.curios.no_numeric_attributes": "No numeric attributes provided; see component details for effects."
 }

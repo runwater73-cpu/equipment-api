@@ -2,6 +2,7 @@ package dev.equipmentstructure.api.menu;
 
 import dev.equipmentstructure.api.EquipmentComponentInstance;
 import dev.equipmentstructure.api.EquipmentComponentRegistry;
+import dev.equipmentstructure.api.EquipmentSlotItemAdapters;
 import dev.equipmentstructure.api.EquipmentHostProviders;
 import dev.equipmentstructure.api.EquipmentSlotDefinition;
 import dev.equipmentstructure.api.EquipmentStructureApi;
@@ -158,7 +159,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
                         return false;
                     }
                     ItemStack equipment = inventory.getItem(EQUIPMENT_SLOT);
-                    return !equipment.isEmpty() && EquipmentComponentRegistry.fromItemStack(stack)
+                    return !equipment.isEmpty() && readComponent(stack, definition.id())
                             .filter(component -> EquipmentStructureApi.checkInstall(
                                     equipment, definition.id(), component).isAllowed()).isPresent();
                 }
@@ -350,11 +351,22 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
         } else {
             ResourceLocation slot = request.slotId();
             if (previous.slot(slot).isEmpty()) return false;
+            if (previous.component(slot).isPresent()
+                    && !EquipmentSlotItemAdapters.canRemove(equipment, slot, player)) return false;
             var carried = getCarried().copy();
             if (request.action() == dev.equipmentstructure.api.network.GridActionPayload.Action.REMOVE
                     || request.action() == dev.equipmentstructure.api.network.GridActionPayload.Action.QUICK_REMOVE) {
                 if (!carried.isEmpty()) return false;
                 var restored = previous.component(slot).flatMap(EquipmentComponentRegistry::createValidatedItemStack);
+                if (previous.component(slot).isEmpty() && guard.getAsBoolean()) {
+                    var personal = EquipmentSlotItemAdapters.removePlayerOwnedItem(equipment, slot, player);
+                    if (personal.isEmpty()) return false;
+                    if (request.action() == dev.equipmentstructure.api.network.GridActionPayload.Action.QUICK_REMOVE)
+                        player.getInventory().placeItemBackInInventory(personal);
+                    else setCarried(personal);
+                    broadcastChanges();
+                    return true;
+                }
                 if (restored.isEmpty()) return false;
                 Runnable destination = request.action() == dev.equipmentstructure.api.network.GridActionPayload.Action.QUICK_REMOVE
                         ? () -> player.getInventory().placeItemBackInInventory(restored.get())
@@ -362,7 +374,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
                 applied = EquipmentStructureApi.removeTransaction(equipment, slot, guard,
                         destination).isPresent();
             } else {
-                var component = EquipmentComponentRegistry.fromItemStack(carried);
+                var component = readComponent(carried, slot);
                 if (component.isEmpty()) return false;
                 var placement = java.util.Optional.of(request.placements().get(slot));
                 if (request.action() == dev.equipmentstructure.api.network.GridActionPayload.Action.REPLACE) {
@@ -475,7 +487,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
             return false;
         }
         var structure = EquipmentStructureApi.structure(equipment).orElseThrow();
-        var resolved = EquipmentComponentRegistry.fromItemStack(stack)
+        var resolved = readComponent(stack, interfaceId)
                 .filter(component -> definition.accepts(structure.equipmentType(), component));
         if (resolved.isEmpty()) {
             return false;
@@ -495,6 +507,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
             return false;
         }
         ItemStack equipment = inventory.getItem(EQUIPMENT_SLOT);
+        if (!EquipmentSlotItemAdapters.canRemove(equipment, interfaceId, playerInventory.player)) return false;
         if (equipment.isEmpty() || !EquipmentStructureApi.hasStructure(equipment)) {
             return false;
         }
@@ -534,6 +547,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
 
     private void refreshDefinitions() {
         ItemStack equipment = inventory.getItem(EQUIPMENT_SLOT);
+        EquipmentSlotItemAdapters.prepare(equipment, playerInventory.player.registryAccess(), playerInventory.player);
         List<EquipmentSlotDefinition> resolved = EquipmentStructureApi.slots(equipment);
         if (resolved.equals(slotDefinitions)) {
             return;
@@ -730,7 +744,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
             // Resolve the carried item before selection changes. An unresolved or
             // incompatible component is a no-op: preserve the current selection,
             // staging mirror and carried stack exactly as they are.
-            var carriedComponent = EquipmentComponentRegistry.fromItemStack(getCarried());
+            var carriedComponent = readComponent(getCarried(), interfaceId);
             if (carriedComponent.isEmpty()
                     || !EquipmentStructureApi.checkInstall(equipmentStack(), interfaceId,
                             carriedComponent.get()).isAllowed()) {
@@ -797,8 +811,14 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
         ItemStack source = slot.getItem();
         ItemStack original = source.copy();
         int containerSize = containerSize();
+        if (index >= containerSize && net.neoforged.fml.ModList.get().isLoaded("curios")
+                && dev.equipmentstructure.api.compat.curios.CuriosArmorCompat.definitions(player).enabled()
+                && dev.equipmentstructure.api.compat.curios.PlayerBoundCurios.eligible(source, player)) {
+            if (!dev.equipmentstructure.api.compat.curios.CuriosBindingActions.quickInstall(player, source)) return ItemStack.EMPTY;
+            slot.setChanged(); broadcastChanges(); return original;
+        }
         var inputComponent = index >= containerSize
-                ? EquipmentComponentRegistry.fromItemStack(source)
+                ? firstComponent(source)
                 : java.util.Optional.<EquipmentComponentInstance>empty();
         if (index < containerSize) {
             int componentIndex = index - PART_SLOT_START;
@@ -879,8 +899,7 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
         var structure = EquipmentStructureApi.structure(equipment).orElseThrow();
         var candidates = new java.util.ArrayList<EquipmentSlotDefinition>();
         for (var value : slotDefinitions) {
-            if (structure.component(value.id()).isEmpty()
-                    && value.accepts(structure.equipmentType(), component)) candidates.add(value);
+            if (structure.component(value.id()).isEmpty()) candidates.add(value);
         }
         // Full equipment is a cheap rejection: no placement search, rule evaluation or install callbacks.
         if (candidates.isEmpty()) return false;
@@ -889,16 +908,20 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
         var grid = dev.equipmentstructure.api.grid.GridTransactions.resolve(structure, gridDefinitions);
         if (!grid.allowed()) return false;
         java.util.Optional<dev.equipmentstructure.api.grid.GridPlacement> placement = java.util.Optional.empty();
-        if (grid.layout().isPresent()) {
-            var footprint = gridDefinitions.components().get(component.id());
-            if (footprint == null) return false;
-            // Every candidate is empty, so they share the same geometry. Search only once per gesture.
-            placement = dev.equipmentstructure.api.grid.GridTransactions.firstFit(grid.layout().get(), candidates.getFirst().id(),
-                    footprint, gridDefinitions.spaces().getOrDefault(component.id(), java.util.List.of()));
-            if (placement.isEmpty()) return false;
-        }
+        var geometry = new java.util.HashMap<ResourceLocation, java.util.Optional<dev.equipmentstructure.api.grid.GridPlacement>>();
         EquipmentSlotDefinition definition = null;
         for (var candidate : candidates) {
+            var resolved = readComponent(source, candidate.id());
+            if (resolved.isEmpty() || !candidate.accepts(structure.equipmentType(), resolved.get())) continue;
+            component = resolved.get();
+            if (grid.layout().isPresent()) {
+                var footprint = gridDefinitions.components().get(component.id());
+                if (footprint == null) continue;
+                var shapeId = component.id();
+                placement = geometry.computeIfAbsent(shapeId, ignored -> dev.equipmentstructure.api.grid.GridTransactions.firstFit(
+                        grid.layout().get(), candidate.id(), footprint, gridDefinitions.spaces().getOrDefault(shapeId, java.util.List.of())));
+                if (placement.isEmpty()) continue;
+            }
             boolean allowed = EquipmentStructureApi.checkInstallAt(equipment, candidate.id(), component, placement).isAllowed();
             if (EquipmentStructureApi.structure(equipment).orElse(null) != structure
                     || gridDefinitions != dev.equipmentstructure.api.grid.GridDefinitions.registered()) return false;
@@ -922,6 +945,20 @@ public final class EquipmentAssemblyMenu extends AbstractContainerMenu {
                     new dev.equipmentstructure.api.network.AssemblySelectionPayload(containerId, definition.id()));
         }
         return true;
+    }
+
+    /** The destination chooses the integration; ordinary item adapters retain their original meaning. */
+    public java.util.Optional<EquipmentComponentInstance> readComponent(ItemStack stack, ResourceLocation slot) {
+        return EquipmentSlotItemAdapters.read(stack, equipmentStack(), slot, playerInventory.player);
+    }
+
+    private java.util.Optional<EquipmentComponentInstance> firstComponent(ItemStack stack) {
+        for (var slot : slotDefinitions) {
+            if (EquipmentStructureApi.component(equipmentStack(), slot.id()).isPresent()) continue;
+            var part = readComponent(stack, slot.id());
+            if (part.isPresent()) return part;
+        }
+        return EquipmentComponentRegistry.fromItemStack(stack);
     }
 
     @Override

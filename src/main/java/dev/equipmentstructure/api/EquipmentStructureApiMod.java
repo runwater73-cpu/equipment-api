@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 public final class EquipmentStructureApiMod {
 
     public static final String MOD_ID = "equipment_structure_api";
-    public static final String NETWORK_VERSION = "1.0";
+    public static final String NETWORK_VERSION = "0.2";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public EquipmentStructureApiMod(IEventBus modEventBus, net.neoforged.fml.ModContainer container) {
@@ -33,6 +33,9 @@ public final class EquipmentStructureApiMod {
         EquipmentStructureDataComponents.DATA_COMPONENTS.register(modEventBus);
         EquipmentAssemblyMenus.MENUS.register(modEventBus);
         EquipmentComponentRuntime.register(modEventBus);
+        if (net.neoforged.fml.ModList.get().isLoaded("curios")) {
+            dev.equipmentstructure.api.compat.curios.CuriosArmorCompat.initialize(modEventBus);
+        }
         // Content integrations register their own compatibility types and explicit host bindings.
         // Use the typed overload so registration remains reliable when the mod event bus
         // is initialized before annotation scan data is available in a dev run.

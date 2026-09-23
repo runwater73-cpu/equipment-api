@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.2.0-alpha.3
+
+- Add Celestial Artifacts' Catastrophe Scroll player binding, preserving native startup-grant success/retry, removal and death rules.
+- Preserve L2Hostility sealed-item restoration into equipment or inventory recovery. Filter managed slots only from L2Tabs' duplicate accessory list; retain its attribute/difficulty screens and Pandora's private container UI.
+- Exclude Celestial/Pandora conditional persistent slot modifiers from permanent binding capacity; expose registration for other addons with this lifecycle.
+- Validate 124 routable Celestial/L2/Pandora items, real cross-armor grants, nested data/effects, startup veto/retry, native seal restoration, UI operations, durability break and bound-scroll death/respawn against the supplied original JARs.
+
+- Include third-party NeoForge attribute tooltip events in accessory details. Evaluate Curios modifiers once at their installed type/index, while retaining normal inventory tooltips.
+- Isolate the wearer model looked up by native accessory renderers during 3D previews. Prevent shared player renderer age/pose state from displacing accessories relative to armor; do not mutate the world renderer.
+- Open the equipment tab when the initial container contents arrive, while preserving an explicit player tab choice and the empty-hand binding view.
+- Reject Artifacts' direct auto-equip into managed player slots without reporting false success. Retain its original mob and unmanaged-slot behavior.
+- Add opt-in acceptance tests against unmodified Artifacts 13.2.5, covering its complete wearable catalog, native attribute text and meshes, sample effects, dynamic capacity, totem consumption, armor breakage, and actual client/server assembly and pose packets. Third-party JARs remain external.
+
+## 0.2.0-alpha.2
+
+- Show localized Curios slot types, original accessory descriptions and current native removal conditions in component details. Keep internal editor slot IDs behind advanced tooltips.
+- Add per-accessory native attribute modifier sections to the attribute details page, using the installed type/index and original tooltip hooks. Keep equipment values separate; this display never applies gameplay modifiers or ticks.
+- Render original item models for armor accessories without a wearable renderer. Reuse the same fallback in the editor and native world layer, including saved poses, selection, visibility and native render toggles. Preserve registered Curios renderers and external-layer adapters.
+- Filter the Eternal Covenant panel to actual player bindings and free stable indices that accept declared bindings. Ordinary armor accessories no longer appear there; transient capacity remains on the corresponding equipment template.
+
+## 0.2.0-alpha.1
+
+- Add optional Curios 9.5.x integration for NeoForge 1.21.1. Armor stores the original accessory items and provides the worn contents to the native Curios inventory, tick, attribute, event and synchronization paths.
+- Use Curios and addon-defined slot types on managed armor, replacing empty built-in armor slot presets. Preserve template boards/body shapes and addon-authored slots. Keep the standalone API's presets when Curios is absent.
+- Route manual accessory installation through the assembly screen. Disable native right-click quick-equip without canceling unrelated item use; preserve explicit mandatory player-binding grants.
+- Support datapack and Java routing, per-type default footprints, individual-item footprint overrides, excluded equipment and explicit template restrictions. Reuse native slot validators, names and icons.
+- Preserve one storage owner through native rebuild, save, copy, unequip, slot shrink and death. Default death drops stay in armor; explicit native keep/drop/destroy rules remain effective.
+- Add shared durability-break recovery for ordinary and Curios components, with `EquipmentBreakEvent` policies. Return parts to inventory/drop them when full; preserve the host at one durability when restoration is unavailable or the event cancels.
+- Reuse registered Curios renderers in the 3D editor and standard world layer. Preserve renderer identity and animations; provide client frame calibration for custom attachments.
+- Cache generated definitions, per-tick template preparation and visible-slot input inspection. Invalidate Curios query caches when armor changes within a tick.
+- Keep each native slot type on one armor category as capacity grows; retain deterministic slot order when items are installed. Validate unworn armor against a read-only hypothetical wearer, preserving addon duplicate-item and prerequisite rules.
+- Add a paged player-binding panel inside the assembly screen, usable without equipment. Share native capacity, accept multiple declared bindings, and reject new permanent bindings in transient slots. Seven Curses and Redemption remain in native player storage across armor swaps and breakage, with original removal, wear-time and death rules.
+- Adapt Enigmatic Legacy+ elytra previews/world offsets using its own render layer, and prevent its forced-equip paths from consuming rejected items. Local third-party test JARs are not redistributed.
+- Add tests with and without Curios and a real client/server Curios editor acceptance fixture. Update the network protocol to reject mixed 0.1/0.2 clients.
+- Preserve native slot visibility/validation queries while hiding only managed menu entries. Respect native ordering and opt out of private hidden types unless explicitly routed.
+- Bridge slot-extension display, empty tooltips and creative cloning; expose native inactive state and render toggles. Preview dynamic extra indices using native capacity and render flags.
+- Preserve native replacement/consumption and explicit inventory backup/restore; recover incompatible transformed items without duplicating the consumed original. Verify native callback/attribute counts, cosmetic semantics and inactive-slot queries.
+
 ## 0.1.2
 
 - Fix the 3D placement editor crash when a component is selected. Resource-location IDs are now passed to translated UI text as strings, which is the type accepted by Minecraft's translation component system.

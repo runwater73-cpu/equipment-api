@@ -4,9 +4,15 @@ Equipment Structure API is a NeoForge 1.21.1 API for equipment that carries modu
 
 This repository is the first publishable baseline. It does not promise to read development snapshots or migrate old experimental saves. Release `0.1.0` is the starting data format for new content mods.
 
-中文接入说明：[0.1.1 接入起步](docs/接入起步.md)。本模组提供 API 和预设模板，演示装备与部件由内容模组注册；不会自动改造全部原版装备。
+中文接入说明：[接入起步](docs/接入起步.md)、[Curios 兼容与装备损坏](docs/Curios兼容.md)。独立运行时，装备与部件由内容模组注册；同时安装 Curios 时，会自动将人形护甲接入 Curios 槽位、格子装配和三维编辑。
+
+`0.2.0-alpha.3` is a preview of the optional Curios integration, tested against Curios 9.5.1+1.21.1. Managed armor uses Curios slot types instead of this API's preset armor installation points. Accessory installation goes through the equipment screen; native right-click quick-equip is disabled. Accessory details reuse native descriptions, Curios attribute hooks and NeoForge addon attribute tooltip events. Accessories without wearable renderers show their original item models in the editor and world. Third-party renderers outside the standard Curios layer need their own visual adapter; this is not a claim of universal addon compatibility.
+
+Permanent relics use a separate, paged player-binding view inside the same assembly screen, accessible without armor. It shares native Curios capacity and removal rules. Enigmatic Legacy+ starter binding, wear-time tracking, and cross-armor slot grants are covered by local tests against the original addon JAR; see [validation](docs/VALIDATION.md) for the exact scope.
 
 ![Grid assembly screen](docs/images/grid-assembly.png)
+
+Alpha.3 adds tested Artifacts, Celestial Artifacts and L2/Pandora adapters, including the Catastrophe Scroll's player binding, native seal restoration, nested Pandora containers and retained L2 attribute/difficulty screens. See [validation](docs/VALIDATION.md) for exact versions, scenarios and remaining limits.
 
 The screenshot uses an isolated test component to show its custom footprint. Test content is excluded from the release JAR.
 
@@ -104,7 +110,7 @@ gradlew.bat test
 gradlew.bat -PincludeGameTests=true runGameTestServer
 ```
 
-The output is `build/libs/equipment_structure_api-0.1.2.jar` and its sources JAR.
+The output is `build/libs/equipment_structure_api-0.2.0-alpha.2.jar` and its sources JAR.
 
 ## License
 
