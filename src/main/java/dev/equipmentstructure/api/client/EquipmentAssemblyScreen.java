@@ -79,6 +79,7 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
     private final EquipmentAssemblyGridView gridView;
     private dev.equipmentstructure.api.compat.curios.client.CuriosBindingPanel bindingPanel;
     private boolean bindingsOpen;
+    private boolean tabChosen;
     private net.minecraft.client.gui.components.Button equipmentTab, bindingsTab;
 
     public EquipmentAssemblyScreen(EquipmentAssemblyMenu menu, Inventory inventory, Component title) {
@@ -141,12 +142,19 @@ public final class EquipmentAssemblyScreen extends AbstractContainerScreen<Equip
 
     public void showBindings(boolean open) {
         if (bindingPanel == null || gridView.busy()) return;
+        tabChosen = true;
         gridView.closeSpacePanel(); gridView.cancelGesture();
         bindingsOpen = open; detailView.open(EquipmentDetailsView.Page.HOME, null);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // The opening packet precedes vanilla container contents. Do not mistake that
+        // temporary empty client stack for an intentional empty-hand binding view.
+        if (bindingPanel != null && !tabChosen && !menu.equipmentStack().isEmpty()) {
+            bindingsOpen = false;
+            tabChosen = true;
+        }
         // All visible information for this frame comes from one immutable
         // read. Layout measurement and drawing therefore see identical data.
         EquipmentAssemblyDisplaySnapshot previousSnapshot = displaySnapshot;

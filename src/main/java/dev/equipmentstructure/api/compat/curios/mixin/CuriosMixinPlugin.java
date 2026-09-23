@@ -9,6 +9,10 @@ import java.util.Set;
 public final class CuriosMixinPlugin implements IMixinConfigPlugin {
     @Override public boolean shouldApplyMixin(String target, String mixin) {
         if (mixin.contains("Enigmatic") && net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("enigmaticlegacyplus") == null) return false;
+        if (mixin.contains("Artifacts") && net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("artifacts") == null) return false;
+        if (mixin.contains("Celestial") && net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("celestial_artifacts") == null) return false;
+        if (mixin.contains("L2Tabs") && net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("l2tabs") == null) return false;
+        if (mixin.contains("L2Hostility") && net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("l2hostility") == null) return false;
         return net.neoforged.fml.loading.FMLLoader.getLoadingModList().getModFileById("curios") != null;
     }
     @Override public void onLoad(String pkg) {}

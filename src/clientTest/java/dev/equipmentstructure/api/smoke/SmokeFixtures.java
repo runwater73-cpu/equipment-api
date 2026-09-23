@@ -21,6 +21,7 @@ public final class SmokeFixtures {
     private static int ticks;
     private static boolean departed;
     @SubscribeEvent public static void setup(FMLCommonSetupEvent event) {
+        if (Boolean.getBoolean("equipment_structure_api.artifactsSmoke") || Boolean.getBoolean("equipment_structure_api.celestialSmoke")) return;
         event.enqueueWork(() -> {
             EquipmentHostProviders.register(Items.IRON_SWORD, BuiltinEquipmentTemplates.SWORD);
             var id = ResourceLocation.fromNamespaceAndPath("equipment_structure_api", "smoke_blade");
@@ -32,7 +33,8 @@ public final class SmokeFixtures {
         });
     }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
-        if (Boolean.getBoolean("equipment_structure_api.curiosSmoke") || Boolean.getBoolean("equipment_structure_api.enigmaticSmoke")) return;
+        if (Boolean.getBoolean("equipment_structure_api.curiosSmoke") || Boolean.getBoolean("equipment_structure_api.enigmaticSmoke")
+                || Boolean.getBoolean("equipment_structure_api.artifactsSmoke") || Boolean.getBoolean("equipment_structure_api.celestialSmoke")) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         player.serverLevel().setDayTime(6000L);
         if (!GridDefinitions.registered().hosts().containsKey(BuiltinEquipmentTemplates.SWORD))

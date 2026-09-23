@@ -4,7 +4,7 @@
   "package": "dev.equipmentstructure.api.compat.curios.mixin",
   "plugin": "dev.equipmentstructure.api.compat.curios.mixin.CuriosMixinPlugin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["CuriosLayerMixin", "EnigmaticElytraMixin"],
-  "mixins": ["CurioStacksHandlerMixin", "CuriosContainerMixin", "CurioInventoryMixin", "ItemStackCopyMixin", "CuriosLifecycleMixin", "ArmorDeathMixin", "ArmorSlotMixin", "CuriosQueriesMixin", "EnigmaticForceEquipMixin"],
+  "client": ["CuriosLayerMixin", "CuriosAttributeTooltipMixin", "CuriosPreviewModelMixin", "EnigmaticElytraMixin"],
+  "mixins": ["CurioStacksHandlerMixin", "CuriosContainerMixin", "CurioInventoryMixin", "ItemStackCopyMixin", "CuriosLifecycleMixin", "ArmorDeathMixin", "ArmorSlotMixin", "CuriosQueriesMixin", "EnigmaticForceEquipMixin", "ArtifactsAutoEquipMixin", "CelestialStartupMixin", "L2TabsCuriosMixin", "L2HostilityRestoreMixin"],
   "injectors": {"defaultRequire": 1}
 }

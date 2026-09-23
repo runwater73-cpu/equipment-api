@@ -69,7 +69,8 @@ public final class CuriosDetailPresentation {
                 modifiers.values().removeIf(modifier -> skipped.isSkipped(modifier.id()));
                 AttributeUtil.applyTextFor(item, text::add, modifiers, attributeContext);
                 var curio = CuriosApi.getCurio(item).orElse(null);
-                if (curio != null) text = curio.getAttributesTooltip(text, context);
+                if (curio != null) text = new ArrayList<>(curio.getAttributesTooltip(text, context));
+                CuriosAttributeTooltipEvents.append(item, attributeContext, text);
             }
             if (text.isEmpty()) rows.add(full(text("no_numeric_attributes"), 0xFF999999));
             else text.forEach(line -> rows.add(full(line, 0xFFAAAAAA)));

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0-alpha.3
+
+- Add Celestial Artifacts' Catastrophe Scroll player binding, preserving native startup-grant success/retry, removal and death rules.
+- Preserve L2Hostility sealed-item restoration into equipment or inventory recovery. Filter managed slots only from L2Tabs' duplicate accessory list; retain its attribute/difficulty screens and Pandora's private container UI.
+- Exclude Celestial/Pandora conditional persistent slot modifiers from permanent binding capacity; expose registration for other addons with this lifecycle.
+- Validate 124 routable Celestial/L2/Pandora items, real cross-armor grants, nested data/effects, startup veto/retry, native seal restoration, UI operations, durability break and bound-scroll death/respawn against the supplied original JARs.
+
+- Include third-party NeoForge attribute tooltip events in accessory details. Evaluate Curios modifiers once at their installed type/index, while retaining normal inventory tooltips.
+- Isolate the wearer model looked up by native accessory renderers during 3D previews. Prevent shared player renderer age/pose state from displacing accessories relative to armor; do not mutate the world renderer.
+- Open the equipment tab when the initial container contents arrive, while preserving an explicit player tab choice and the empty-hand binding view.
+- Reject Artifacts' direct auto-equip into managed player slots without reporting false success. Retain its original mob and unmanaged-slot behavior.
+- Add opt-in acceptance tests against unmodified Artifacts 13.2.5, covering its complete wearable catalog, native attribute text and meshes, sample effects, dynamic capacity, totem consumption, armor breakage, and actual client/server assembly and pose packets. Third-party JARs remain external.
+
 ## 0.2.0-alpha.2
 
 - Show localized Curios slot types, original accessory descriptions and current native removal conditions in component details. Keep internal editor slot IDs behind advanced tooltips.

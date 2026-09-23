@@ -74,7 +74,7 @@ public final class CuriosArmorPreview {
         }
         model.young = false;
         model.setupAnim(wearer, 0, 0, 0, 0, 0);
-        CuriosApi.getCuriosInventory(wearer).ifPresent(inv -> inv.getCurios().forEach((type, handler) -> {
+        CuriosPreviewModels.render(wearer, model, () -> CuriosApi.getCuriosInventory(wearer).ifPresent(inv -> inv.getCurios().forEach((type, handler) -> {
             for (int i = 0; i < handler.getSlots(); i++) {
                 var item = handler.getCosmeticStacks().getStackInSlot(i);
                 boolean cosmetic = !item.isEmpty();
@@ -103,6 +103,6 @@ public final class CuriosArmorPreview {
                     } finally { poses.popPose(); }
                 }
             }
-        }));
+        })));
     }
 }

@@ -17,6 +17,24 @@ import top.theillusivec4.curios.api.CuriosApi;
 @PrefixGameTestTemplate(false)
 public final class CuriosArmorGameTests {
     @GameTest(template = "empty")
+    public static void savedAddonSlotTokensDoNotUnlockPermanentBindings(GameTestHelper helper) {
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var handler = CuriosApi.getCuriosInventory(player).orElseThrow().getStacksHandler(KEY.type()).orElseThrow();
+        int stable = ((CuriosBindingCapacity) handler).equipment$stableCapacity();
+        for (var id : java.util.List.of("curseofpandora:curse_of_spell_slots", "celestial_artifacts:test_head_bonus")) {
+            var modifier = net.minecraft.resources.ResourceLocation.parse(id);
+            handler.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(modifier, 2,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE));
+            helper.assertTrue(handler.getSlots() == stable + 2, "original addon capacity still granted");
+            helper.assertTrue(((CuriosBindingCapacity) handler).equipment$stableCapacity() == stable,
+                    "saved addon token does not imply permanent player ownership");
+            helper.assertTrue(!PlayerBoundCurios.install(player, new CuriosSlotKey(KEY.type(), stable, false), new ItemStack(Items.DIAMOND)),
+                    "conditional capacity rejects a binding");
+            handler.removeModifier(modifier);
+        }
+        helper.succeed();
+    }
+    @GameTest(template = "empty")
     public static void bindingPanelExcludesArmorItemsAndTemporaryCapacity(GameTestHelper helper) {
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
         helper.assertTrue(CuriosBindingActions.keys(player).contains(KEY), "empty stable slot accepts declared bindings without armor");

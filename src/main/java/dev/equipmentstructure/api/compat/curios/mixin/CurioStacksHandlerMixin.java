@@ -26,11 +26,13 @@ abstract class CurioStacksHandlerMixin implements dev.equipmentstructure.api.com
         // safety bound, not a replacement for Curios' live capacity or modifier processing.
         double size = baseSize;
         for (var modifier : persistentModifiers.values()) {
+            if (dev.equipmentstructure.api.compat.curios.CuriosCompatibility.conditionalSlotModifier(modifier.id())) continue;
             if (modifier.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) size += modifier.amount();
             else if (modifier.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_BASE) size += baseSize * modifier.amount();
         }
         for (var modifier : persistentModifiers.values())
-            if (modifier.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) size *= modifier.amount();
+            if (!dev.equipmentstructure.api.compat.curios.CuriosCompatibility.conditionalSlotModifier(modifier.id())
+                    && modifier.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) size *= modifier.amount();
         return Math.max(0, Math.min(128, (int) size));
     }
     @Inject(method = "getSyncTag", at = @At("RETURN"))

@@ -5,6 +5,8 @@ run/
 run-gametest/
 run-smoke-server/
 run-smoke-client/
+run-celestial-server/
+run-celestial-client/
 .idea/
 *.iml
 *.log
